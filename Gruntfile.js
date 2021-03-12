@@ -35,6 +35,9 @@ module.exports = (grunt) => {
         libraryTarget: 'umd',
         libraryExport: 'default',
       },
+      resolve: {
+        extensions: ['.ts', '.js', '.json']
+      },
       devtool: process.env.VEX_GENMAP || mode === 'production' ? 'source-map' : false,
       module: {
         rules: [
@@ -48,6 +51,15 @@ module.exports = (grunt) => {
                   presets: [preset],
                   plugins: ['@babel/plugin-transform-object-assign'],
                 },
+              },
+            ],
+          },
+          {
+            test: /\.ts?$/,
+            exclude: /(node_modules|bower_components)/,
+            use: [
+              {
+                loader: 'ts-loader',
               },
             ],
           },

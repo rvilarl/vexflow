@@ -71,5 +71,9 @@
     "notation",
     "guitar",
     "tablature"
-  ]
+  ],
+  "dependencies": {
+    "ts-loader": "^8.0.18",
+    "typescript": "^4.2.3"
+  }
 }
