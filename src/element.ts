@@ -11,15 +11,25 @@ import { Registry } from './registry';
 import { Flow } from './tables';
 
 export class Element {
+  static ID: number;
+  context: any; //DrawContext;
+  rendered: boolean;
+  style: any;
+  attrs: any; //IElementAttributes;
+  boundingBox: any; //BoundingBox;
+  fontStack: any[]; //Font[];
+  musicFont: any; //Font;
+  registry: any; //Registry;
+
   static newID() {
     return 'auto' + Element.ID++;
   }
 
-  constructor({ type } = {}) {
+  constructor() {
     this.attrs = {
       id: Element.newID(),
       el: null,
-      type: type || 'Base',
+      type: 'Base',
       classes: {},
     };
 
@@ -79,6 +89,10 @@ export class Element {
     this.applyStyle();
     this.draw();
     this.restoreStyle();
+  }
+
+  draw(element?: any, x_shift?: any): void {
+    // do nothing
   }
 
   // An element can have multiple class labels.
