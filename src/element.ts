@@ -15,14 +15,14 @@ import { Font } from './smufl';
 import { IRenderContext, IStyle, IElementAttributes } from './types/common';
 export class Element {
   static ID: number;
-  context: IRenderContext | null; //DrawContext;
+  context?: IRenderContext;
   rendered: boolean;
-  style: IStyle | null;
+  style?: IStyle;
   attrs: IElementAttributes;
-  boundingBox: BoundingBox | null;
+  boundingBox?: BoundingBox;
   fontStack: Font[];
   musicFont: Font;
-  registry: Registry | null;
+  registry?: Registry;
 
   static newID(): string {
     return 'auto' + Element.ID++;
@@ -36,10 +36,6 @@ export class Element {
       classes: {},
     };
 
-    this.boundingBox = null;
-    this.context = null;
-    this.style = null;
-    this.registry = null;
     this.rendered = false;
     this.fontStack = Flow.DEFAULT_FONT_STACK;
     this.musicFont = Flow.DEFAULT_FONT_STACK[0];
@@ -67,12 +63,12 @@ export class Element {
     return this;
   }
 
-  getStyle(): IStyle | null {
+  getStyle(): IStyle | undefined {
     return this.style;
   }
 
   // Apply current style to Canvas `context`
-  applyStyle(context: IRenderContext | null = this.context, style: IStyle | null = this.getStyle()) {
+  applyStyle(context: IRenderContext | undefined = this.context, style: IStyle | undefined = this.getStyle()): this {
     if (!style) return this;
     if (!context) return this;
 
@@ -85,7 +81,7 @@ export class Element {
     return this;
   }
 
-  restoreStyle(context: IRenderContext | null = this.context, style: IStyle | null = this.getStyle()): this {
+  restoreStyle(context: IRenderContext | undefined = this.context, style: IStyle | undefined = this.getStyle()): this {
     if (!style) return this;
     if (!context) return this;
     context.restore();
@@ -93,7 +89,7 @@ export class Element {
   }
 
   // draw with style of an element.
-  drawWithStyle() {
+  drawWithStyle(): void {
     this.checkContext();
     this.applyStyle();
     this.draw();
@@ -146,7 +142,7 @@ export class Element {
     return this.rendered;
   }
 
-  setRendered(rendered: boolean = true): this {
+  setRendered(rendered = true): this {
     this.rendered = rendered;
     return this;
   }
@@ -159,7 +155,7 @@ export class Element {
     return this.attrs[name];
   }
 
-  setAttribute(name: string, value: string) {
+  setAttribute(name: string, value: string): this {
     const id = this.attrs.id;
     const oldValue = this.attrs[name];
     this.attrs[name] = value;
@@ -170,16 +166,16 @@ export class Element {
     return this;
   }
 
-  getContext(): IRenderContext | null {
+  getContext(): IRenderContext | undefined {
     return this.context;
   }
 
-  setContext(context: IRenderContext) {
+  setContext(context?: IRenderContext): this {
     this.context = context;
     return this;
   }
 
-  getBoundingBox(): BoundingBox | null {
+  getBoundingBox(): BoundingBox | undefined {
     return this.boundingBox;
   }
 
