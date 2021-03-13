@@ -9,19 +9,22 @@
 import { Vex } from './vex';
 import { Registry } from './registry';
 import { Flow } from './tables';
+import { BoundingBox } from './boundingbox';
+import { Font } from './smufl';
 
+import { IRenderContext, IStyle, IElementAttributes } from './types/common';
 export class Element {
   static ID: number;
-  context: any; //DrawContext;
+  context: IRenderContext | null; //DrawContext;
   rendered: boolean;
-  style: any;
-  attrs: any; //IElementAttributes;
-  boundingBox: any; //BoundingBox;
-  fontStack: any[]; //Font[];
-  musicFont: any; //Font;
-  registry: any; //Registry;
+  style: IStyle | null;
+  attrs: IElementAttributes;
+  boundingBox: BoundingBox | null;
+  fontStack: Font[];
+  musicFont: Font;
+  registry: Registry | null;
 
-  static newID() {
+  static newID(): string {
     return 'auto' + Element.ID++;
   }
 
@@ -35,6 +38,8 @@ export class Element {
 
     this.boundingBox = null;
     this.context = null;
+    this.style = null;
+    this.registry = null;
     this.rendered = false;
     this.fontStack = Flow.DEFAULT_FONT_STACK;
     this.musicFont = Flow.DEFAULT_FONT_STACK[0];
@@ -46,27 +51,30 @@ export class Element {
   }
 
   // set music font
-  setFontStack(fontStack) {
+  setFontStack(fontStack: Font[]): this {
     this.fontStack = fontStack;
     this.musicFont = fontStack[0];
     return this;
   }
-  getFontStack() {
+
+  getFontStack(): Font[] {
     return this.fontStack;
   }
 
   // set the draw style of a stemmable note:
-  setStyle(style) {
+  setStyle(style: IStyle): this {
     this.style = style;
     return this;
   }
-  getStyle() {
+
+  getStyle(): IStyle | null {
     return this.style;
   }
 
   // Apply current style to Canvas `context`
-  applyStyle(context = this.context, style = this.getStyle()) {
+  applyStyle(context: IRenderContext | null = this.context, style: IStyle | null = this.getStyle()) {
     if (!style) return this;
+    if (!context) return this;
 
     context.save();
     if (style.shadowColor) context.setShadowColor(style.shadowColor);
@@ -77,8 +85,9 @@ export class Element {
     return this;
   }
 
-  restoreStyle(context = this.context, style = this.getStyle()) {
+  restoreStyle(context: IRenderContext | null = this.context, style: IStyle | null = this.getStyle()): this {
     if (!style) return this;
+    if (!context) return this;
     context.restore();
     return this;
   }
@@ -91,15 +100,17 @@ export class Element {
     this.restoreStyle();
   }
 
-  draw(element?: any, x_shift?: any): void {
+  // eslint-disable-next-line no-unused-vars
+  draw(element?: Element, x_shift?: number): void {
     // do nothing
   }
 
   // An element can have multiple class labels.
-  hasClass(className) {
+  hasClass(className: string): boolean {
     return this.attrs.classes[className] === true;
   }
-  addClass(className) {
+
+  addClass(className: string): this {
     this.attrs.classes[className] = true;
     if (this.registry) {
       this.registry.onUpdate({
@@ -112,7 +123,7 @@ export class Element {
     return this;
   }
 
-  removeClass(className) {
+  removeClass(className: string): this {
     delete this.attrs.classes[className];
     if (this.registry) {
       this.registry.onUpdate({
@@ -126,25 +137,29 @@ export class Element {
   }
 
   // This is called by the registry after the element is registered.
-  onRegister(registry) {
+  onRegister(registry: Registry): this {
     this.registry = registry;
     return this;
   }
-  isRendered() {
+
+  isRendered(): boolean {
     return this.rendered;
   }
-  setRendered(rendered = true) {
+
+  setRendered(rendered: boolean = true): this {
     this.rendered = rendered;
     return this;
   }
 
-  getAttributes() {
+  getAttributes(): IElementAttributes | null {
     return this.attrs;
   }
-  getAttribute(name) {
+
+  getAttribute(name: string): string {
     return this.attrs[name];
   }
-  setAttribute(name, value) {
+
+  setAttribute(name: string, value: string) {
     const id = this.attrs.id;
     const oldValue = this.attrs[name];
     this.attrs[name] = value;
@@ -155,19 +170,21 @@ export class Element {
     return this;
   }
 
-  getContext() {
+  getContext(): IRenderContext | null {
     return this.context;
   }
-  setContext(context) {
+
+  setContext(context: IRenderContext) {
     this.context = context;
     return this;
   }
-  getBoundingBox() {
+
+  getBoundingBox(): BoundingBox | null {
     return this.boundingBox;
   }
 
   // Validators
-  checkContext() {
+  checkContext(): IRenderContext {
     if (!this.context) {
       throw new Vex.RERR('NoContext', 'No rendering context attached to instance');
     }

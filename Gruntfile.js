@@ -18,7 +18,7 @@ module.exports = (grunt) => {
   const TARGET_MIN = 'vexflow-min.js';
 
   // Used for eslint and docco
-  const SOURCES = ['src/*.js', '!src/header.js'];
+  const SOURCES = ['src/*.ts', 'src/*.js', '!src/header.js'];
 
   // Take all test files in 'tests/' and build TARGET_TESTS
   const TARGET_TESTS = path.join(BUILD_DIR, 'vexflow-tests.js');
