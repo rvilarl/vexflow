@@ -4,7 +4,7 @@
 // This class implements some standard music theory routines.
 
 import { Vex } from './vex';
-import { IMusicAccidental, IMusicKeyParts, IMusicNoteParts, IMusicNoteValue } from './types/common';
+import { IMusicAccidental, IMusicNoteParts, IMusicNoteValue } from './types/common';
 
 export class Music {
   static get NUM_TONES(): number {
@@ -19,7 +19,7 @@ export class Music {
     return [0, 2, 4, 5, 7, 9, 11];
   }
 
-  static get root_indices(): { [root: string]: number } {
+  static get root_indices(): Record<string, number> {
     return {
       c: 0,
       d: 1,
@@ -39,7 +39,7 @@ export class Music {
     return ['unison', 'm2', 'M2', 'm3', 'M3', 'p4', 'dim5', 'p5', 'm6', 'M6', 'b7', 'M7', 'octave'];
   }
 
-  static get diatonic_accidentals(): { [diatonic_interval: string]: IMusicAccidental } {
+  static get diatonic_accidentals(): Record<string, IMusicAccidental> {
     return {
       unison: { note: 0, accidental: 0 },
       m2: { note: 1, accidental: -1 },
@@ -57,7 +57,7 @@ export class Music {
     };
   }
 
-  static get intervals(): { [interval: string]: number } {
+  static get intervals(): Record<string, number> {
     return {
       u: 0,
       unison: 0,
@@ -102,7 +102,7 @@ export class Music {
     };
   }
 
-  static get scales(): { [scale: string]: number[] } {
+  static get scales(): Record<string, number[]> {
     return {
       major: [2, 2, 1, 2, 2, 2, 1],
       dorian: [2, 1, 2, 2, 2, 1, 2],
@@ -111,7 +111,7 @@ export class Music {
     };
   }
 
-  static get scaleTypes(): { [scaleType: string]: number[] } {
+  static get scaleTypes(): Record<string, number[]> {
     return {
       M: Music.scales.major,
       m: Music.scales.minor,
@@ -122,7 +122,7 @@ export class Music {
     return ['bb', 'b', 'n', '#', '##'];
   }
 
-  static get noteValues(): { [value: string]: IMusicNoteValue } {
+  static get noteValues(): Record<string, IMusicNoteValue> {
     return {
       c: { root_index: 0, int_val: 0 },
       cn: { root_index: 0, int_val: 0 },
@@ -207,7 +207,7 @@ export class Music {
     }
   }
 
-  getKeyParts(keyString: string): IMusicKeyParts {
+  getKeyParts(keyString: string): IMusicNoteParts {
     if (!keyString || keyString.length < 1) {
       throw new Vex.RERR('BadArguments', 'Invalid key: ' + keyString);
     }
@@ -369,8 +369,9 @@ export class Music {
   // `keySignature`. For example, passing a `G` to `keySignature` would
   // return a scale map with every note naturalized except for `F` which
   // has an `F#` state.
-  createScaleMap(keySignature: string): { [rootName: string]: string } {
+  createScaleMap(keySignature: string): Record<string, string> {
     const keySigParts = this.getKeyParts(keySignature);
+    if (!keySigParts.type) throw new Vex.RERR('BadArguments', 'Unsupported key type: undefined');
     const scaleName = Music.scaleTypes[keySigParts.type];
 
     let keySigString = keySigParts.root;
@@ -381,7 +382,7 @@ export class Music {
     const scale = this.getScaleTones(this.getNoteValue(keySigString), scaleName);
     const noteLocation = Music.root_indices[keySigParts.root];
 
-    const scaleMap = {} as { [rootName: string]: string };
+    const scaleMap = {} as Record<string, string>;
     for (let i = 0; i < Music.roots.length; ++i) {
       const index = (noteLocation + i) % Music.roots.length;
       const rootName = Music.roots[index];

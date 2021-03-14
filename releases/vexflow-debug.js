@@ -22397,6 +22397,8 @@ var Music = /** @class */ (function () {
     // has an `F#` state.
     Music.prototype.createScaleMap = function (keySignature) {
         var keySigParts = this.getKeyParts(keySignature);
+        if (!keySigParts.type)
+            throw new vex_1.Vex.RERR('BadArguments', 'Unsupported key type: undefined');
         var scaleName = Music.scaleTypes[keySigParts.type];
         var keySigString = keySigParts.root;
         if (keySigParts.accidental)

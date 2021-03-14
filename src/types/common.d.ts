@@ -3,15 +3,10 @@ export interface IMusicAccidental {
   accidental: number;
 }
 
-export interface IMusicKeyParts {
-  root: string;
-  accidental: string;
-  type: string;
-}
-
 export interface IMusicNoteParts {
   root: string;
   accidental: string;
+  type?: string;
 }
 
 export interface IMusicNoteValue {
