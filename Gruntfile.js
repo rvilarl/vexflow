@@ -185,7 +185,7 @@ module.exports = (grunt) => {
     'concat',
     'docco',
   ]);
-  grunt.registerTask('test', 'Run qunit tests.', ['webpack:buildDev', 'webpack:buildTest', 'concat', 'qunit']);
+  grunt.registerTask('test', 'Run qunit tests.', ['clean', 'webpack:buildDev', 'webpack:buildTest', 'concat', 'qunit']);
 
   // Release current build.
   grunt.registerTask('stage', 'Stage current bundles to releases/.', () => {
