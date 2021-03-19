@@ -5,57 +5,12 @@
 
 /* eslint max-classes-per-file: "off" */
 //import { IStaveOptions } from '../src/types/stave';
-
 import { Factory } from '../src/factory';
 import { Renderer } from '../src/renderer';
 import { Note } from '../src/note';
-
 import { Flow } from '../src/tables';
-import { QUnit } from './qunit';
 
 declare function $(...args: any): any;
-
-declare var global: any;
-
-// Mock out the QUnit stuff for generating svg images,
-// since we don't really care about the assertions.
-
-if (!global.QUnit) {
-  global.QUnit = QUnit;
-  QUnit.assertions = {
-    ok: () => true,
-    equal: () => true,
-    deepEqual: () => true,
-    expect: () => true,
-    throws: () => true,
-    notOk: () => true,
-    notEqual: () => true,
-    notDeepEqual: () => true,
-    strictEqual: () => true,
-    notStrictEqual: () => true,
-  };
-
-  QUnit.module = (name: any) => {
-    QUnit.current_module = name;
-  };
-
-  QUnit.test = (name: any, func: any) => {
-    QUnit.current_test = name;
-    console.log(' \u001B[0G' + QUnit.current_module + ' :: ' + name + '\u001B[0K');
-    func(QUnit.assertions);
-  };
-  global.test = QUnit.test;
-  global.ok = QUnit.assertions.ok;
-  global.equal = QUnit.assertions.equal;
-  global.deepEqual = QUnit.assertions.deepEqual;
-  global.expect = QUnit.assertions.expect;
-  global.throws = QUnit.assertions.throws;
-  global.notOk = QUnit.assertions.notOk;
-  global.notEqual = QUnit.assertions.notEqual;
-  global.notDeepEqual = QUnit.assertions.notDeepEqual;
-  global.strictEqual = QUnit.assertions.strictEqual;
-  global.notStrictEqual = QUnit.assertions.notStrictEqual;
-}
 
 const VF: any = Flow;
 

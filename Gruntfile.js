@@ -177,8 +177,15 @@ module.exports = (grunt) => {
   grunt.loadNpmTasks('grunt-webpack');
 
   // Default task(s).
-  grunt.registerTask('default', ['eslint', 'webpack:buildDev', 'webpack:build', 'concat', 'docco']);
-  grunt.registerTask('test', 'Run qunit tests.', ['webpack:buildTest', 'concat', 'qunit']);
+  grunt.registerTask('default', [
+    'eslint',
+    'webpack:buildDev',
+    'webpack:build',
+    'webpack:buildTest',
+    'concat',
+    'docco',
+  ]);
+  grunt.registerTask('test', 'Run qunit tests.', ['webpack:buildDev', 'webpack:buildTest', 'concat', 'qunit']);
 
   // Release current build.
   grunt.registerTask('stage', 'Stage current bundles to releases/.', () => {
