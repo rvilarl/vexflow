@@ -10,6 +10,7 @@ import { Renderer } from '../src/renderer';
 import { Note } from '../src/note';
 import { Flow } from '../src/tables';
 
+declare var QUnit: any;
 declare function $(...args: any): any;
 
 const VF: any = Flow;
