@@ -24,7 +24,7 @@ module.exports = (grunt) => {
   const TARGET_TESTS = path.join(BUILD_DIR, 'vexflow-tests.js');
   const TEST_SOURCES = ['tests/vexflow_test_helpers.js', 'tests/mocks.js', 'tests/*_tests.js', 'tests/run.js'];
 
-  function webpackConfig(target, entry, preset, mode) {
+  function webpackConfig(target, entry, mode) {
     return {
       mode,
       entry: entry,
@@ -36,26 +36,13 @@ module.exports = (grunt) => {
         libraryExport: 'default',
       },
       resolve: {
-        extensions: ['.ts', '.js', '.json']
+        extensions: ['.ts', '.js', '.json'],
       },
       devtool: process.env.VEX_GENMAP || mode === 'production' ? 'source-map' : false,
       module: {
         rules: [
           {
-            test: /\.js?$/,
-            exclude: /(node_modules|bower_components)/,
-            use: [
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: [preset],
-                  plugins: ['@babel/plugin-transform-object-assign'],
-                },
-              },
-            ],
-          },
-          {
-            test: /\.ts?$/,
+            test: /\.?s?$/,
             exclude: /(node_modules|bower_components)/,
             use: [
               {
@@ -68,9 +55,9 @@ module.exports = (grunt) => {
     };
   }
 
-  const webpackProd = webpackConfig(TARGET_MIN, MODULE_ENTRY, ['@babel/preset-env'], 'production');
-  const webpackDev = webpackConfig(TARGET_RAW, MODULE_ENTRY, ['@babel/preset-env'], 'development');
-  const webpackTest = webpackConfig('vexflow-tests-ts.js', path.join(BASE_DIR, 'tests/index.ts'), ['@babel/preset-env'], 'development');
+  const webpackProd = webpackConfig(TARGET_MIN, MODULE_ENTRY, 'production');
+  const webpackDev = webpackConfig(TARGET_RAW, MODULE_ENTRY, 'development');
+  const webpackTest = webpackConfig('vexflow-tests-ts.js', path.join(BASE_DIR, 'tests/index.ts'), 'development');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -178,6 +165,7 @@ module.exports = (grunt) => {
 
   // Default task(s).
   grunt.registerTask('default', [
+    'clean',
     'eslint',
     'webpack:buildDev',
     'webpack:build',
