@@ -50,11 +50,7 @@ if (!window.QUnit) {
   notStrictEqual = QUnit.assertions.notStrictEqual;
 }
 
-if (typeof require === 'function') {
-  Vex = require('./vexflow-debug.js');
-}
-
-var VF = Vex.Flow;
+global['VF'] = Vex.Flow;
 VF.Test = (function () {
   var Test = {
     // Test Options.
@@ -213,7 +209,7 @@ VF.Test = (function () {
     },
 
     runNodeTest: function (name, func, params) {
-      var fs = require('fs');
+      var fs = VF._fs;
 
       // Allows `name` to be used inside file names.
       function sanitizeName(name) {

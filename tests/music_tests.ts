@@ -2,6 +2,12 @@
  * VexFlow - Music API Tests
  * Copyright Mohit Muthanna 2010 <mohit@muthanna.com>
  */
+declare const QUnit: any;
+declare const ok: any;
+declare const test: any;
+declare const expect: any;
+declare const equal: any;
+declare const VF: any;
 
 VF.Test.Music = (function () {
   var Music = {
