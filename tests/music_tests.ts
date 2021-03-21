@@ -11,301 +11,281 @@ declare function test(...args: any): any;
 declare function expect(...args: any): any;
 declare function equal(...args: any): any;
 
-export const MusicTests = (function () {
-  return {
-    Start: function () {
-      QUnit.module('Music');
-      test('Valid Keys', this.validKeys);
-      test('Note Values', this.noteValue);
-      test('Interval Values', this.intervalValue);
-      test('Relative Notes', this.relativeNotes);
-      test('Relative Note Names', this.relativeNoteNames);
-      test('Canonical Notes', this.canonicalNotes);
-      test('Canonical Intervals', this.canonicalNotes);
-      test('Scale Tones', this.scaleTones);
-      test('Scale Intervals', this.scaleIntervals);
-    },
+export class MusicTests {
+  static Start(): void {
+    QUnit.module('Music');
+    test('Valid Keys', this.validKeys);
+    test('Note Values', this.noteValue);
+    test('Interval Values', this.intervalValue);
+    test('Relative Notes', this.relativeNotes);
+    test('Relative Note Names', this.relativeNoteNames);
+    test('Canonical Notes', this.canonicalNotes);
+    test('Canonical Intervals', this.canonicalNotes);
+    test('Scale Tones', this.scaleTones);
+    test('Scale Intervals', this.scaleIntervals);
+  }
 
-    validNotes: function () {
-      expect(10);
+  static validNotes(): void {
+    expect(10);
 
-      const music = new Music();
+    let parts = Music.getNoteParts('c');
+    equal(parts.root, 'c');
+    equal(parts.accidental, null);
 
-      let parts = music.getNoteParts('c');
-      equal(parts.root, 'c');
-      equal(parts.accidental, null);
+    parts = Music.getNoteParts('C');
+    equal(parts.root, 'c');
+    equal(parts.accidental, null);
 
-      parts = music.getNoteParts('C');
-      equal(parts.root, 'c');
-      equal(parts.accidental, null);
+    parts = Music.getNoteParts('c#');
+    equal(parts.root, 'c');
+    equal(parts.accidental, '#');
 
-      parts = music.getNoteParts('c#');
-      equal(parts.root, 'c');
-      equal(parts.accidental, '#');
+    parts = Music.getNoteParts('c##');
+    equal(parts.root, 'c');
+    equal(parts.accidental, '##');
 
-      parts = music.getNoteParts('c##');
-      equal(parts.root, 'c');
-      equal(parts.accidental, '##');
+    try {
+      Music.getNoteParts('r');
+    } catch (e) {
+      equal(e.code, 'BadArguments', 'Invalid note: r');
+    }
 
-      try {
-        music.getNoteParts('r');
-      } catch (e) {
-        equal(e.code, 'BadArguments', 'Invalid note: r');
-      }
+    try {
+      Music.getNoteParts('');
+    } catch (e) {
+      equal(e.code, 'BadArguments', "Invalid note: ''");
+    }
+  }
 
-      try {
-        music.getNoteParts('');
-      } catch (e) {
-        equal(e.code, 'BadArguments', "Invalid note: ''");
-      }
-    },
+  static validKeys(): void {
+    expect(18);
 
-    validKeys: function () {
-      expect(18);
+    let parts = Music.getKeyParts('c');
+    equal(parts.root, 'c');
+    equal(parts.accidental, null);
+    equal(parts.type, 'M');
 
-      const music = new Music();
+    parts = Music.getKeyParts('d#');
+    equal(parts.root, 'd');
+    equal(parts.accidental, '#');
+    equal(parts.type, 'M');
 
-      let parts = music.getKeyParts('c');
-      equal(parts.root, 'c');
-      equal(parts.accidental, null);
-      equal(parts.type, 'M');
+    parts = Music.getKeyParts('fbm');
+    equal(parts.root, 'f');
+    equal(parts.accidental, 'b');
+    equal(parts.type, 'm');
 
-      parts = music.getKeyParts('d#');
-      equal(parts.root, 'd');
-      equal(parts.accidental, '#');
-      equal(parts.type, 'M');
+    parts = Music.getKeyParts('c#mel');
+    equal(parts.root, 'c');
+    equal(parts.accidental, '#');
+    equal(parts.type, 'mel');
 
-      parts = music.getKeyParts('fbm');
-      equal(parts.root, 'f');
-      equal(parts.accidental, 'b');
-      equal(parts.type, 'm');
+    parts = Music.getKeyParts('g#harm');
+    equal(parts.root, 'g');
+    equal(parts.accidental, '#');
+    equal(parts.type, 'harm');
 
-      parts = music.getKeyParts('c#mel');
-      equal(parts.root, 'c');
-      equal(parts.accidental, '#');
-      equal(parts.type, 'mel');
+    try {
+      Music.getKeyParts('r');
+    } catch (e) {
+      equal(e.code, 'BadArguments', 'Invalid key: r');
+    }
 
-      parts = music.getKeyParts('g#harm');
-      equal(parts.root, 'g');
-      equal(parts.accidental, '#');
-      equal(parts.type, 'harm');
+    try {
+      Music.getKeyParts('');
+    } catch (e) {
+      equal(e.code, 'BadArguments', "Invalid key: ''");
+    }
 
-      try {
-        music.getKeyParts('r');
-      } catch (e) {
-        equal(e.code, 'BadArguments', 'Invalid key: r');
-      }
+    try {
+      Music.getKeyParts('#m');
+    } catch (e) {
+      equal(e.code, 'BadArguments', 'Invalid key: #m');
+    }
+  }
 
-      try {
-        music.getKeyParts('');
-      } catch (e) {
-        equal(e.code, 'BadArguments', "Invalid key: ''");
-      }
+  static noteValue(): void {
+    expect(3);
 
-      try {
-        music.getKeyParts('#m');
-      } catch (e) {
-        equal(e.code, 'BadArguments', 'Invalid key: #m');
-      }
-    },
+    let note = Music.getNoteValue('c');
+    equal(note, 0);
 
-    noteValue: function () {
-      expect(3);
+    try {
+      Music.getNoteValue('r');
+    } catch (e) {
+      ok(true, 'Invalid note');
+    }
 
-      const music = new Music();
+    note = Music.getNoteValue('f#');
+    equal(note, 6);
+  }
 
-      let note = music.getNoteValue('c');
-      equal(note, 0);
+  static intervalValue(): void {
+    expect(2);
 
-      try {
-        music.getNoteValue('r');
-      } catch (e) {
-        ok(true, 'Invalid note');
-      }
+    const value = Music.getIntervalValue('b2');
+    equal(value, 1);
 
-      note = music.getNoteValue('f#');
-      equal(note, 6);
-    },
+    try {
+      Music.getIntervalValue('7');
+    } catch (e) {
+      ok(true, 'Invalid note');
+    }
+  }
 
-    intervalValue: function () {
-      expect(2);
+  static relativeNotes(): void {
+    expect(8);
 
-      const music = new Music();
+    let value = Music.getRelativeNoteValue(Music.getNoteValue('c'), Music.getIntervalValue('b5'));
+    equal(value, 6);
 
-      const value = music.getIntervalValue('b2');
-      equal(value, 1);
+    try {
+      Music.getRelativeNoteValue(Music.getNoteValue('bc'), Music.getIntervalValue('b2'));
+    } catch (e) {
+      ok(true, 'Invalid note');
+    }
 
-      try {
-        music.getIntervalValue('7');
-      } catch (e) {
-        ok(true, 'Invalid note');
-      }
-    },
+    try {
+      Music.getRelativeNoteValue(Music.getNoteValue('b'), Music.getIntervalValue('p3'));
+    } catch (e) {
+      ok(true, 'Invalid interval');
+    }
 
-    relativeNotes: function () {
-      expect(8);
+    // Direction
+    value = Music.getRelativeNoteValue(Music.getNoteValue('d'), Music.getIntervalValue('2'), -1);
+    equal(value, 0);
 
-      const music = new Music();
+    try {
+      Music.getRelativeNoteValue(Music.getNoteValue('b'), Music.getIntervalValue('p4'), 0);
+    } catch (e) {
+      ok(true, 'Invalid direction');
+    }
 
-      let value = music.getRelativeNoteValue(music.getNoteValue('c'), music.getIntervalValue('b5'));
-      equal(value, 6);
+    // Rollover
+    value = Music.getRelativeNoteValue(Music.getNoteValue('b'), Music.getIntervalValue('b5'));
+    equal(value, 5);
 
-      try {
-        music.getRelativeNoteValue(music.getNoteValue('bc'), music.getIntervalValue('b2'));
-      } catch (e) {
-        ok(true, 'Invalid note');
-      }
+    // Reverse rollover
+    value = Music.getRelativeNoteValue(Music.getNoteValue('c'), Music.getIntervalValue('b2'), -1);
+    equal(value, 11);
 
-      try {
-        music.getRelativeNoteValue(music.getNoteValue('b'), music.getIntervalValue('p3'));
-      } catch (e) {
-        ok(true, 'Invalid interval');
-      }
+    // Practical tests
+    value = Music.getRelativeNoteValue(Music.getNoteValue('g'), Music.getIntervalValue('p5'));
+    equal(value, 2);
+  }
 
-      // Direction
-      value = music.getRelativeNoteValue(music.getNoteValue('d'), music.getIntervalValue('2'), -1);
-      equal(value, 0);
+  static relativeNoteNames(): void {
+    expect(9);
 
-      try {
-        music.getRelativeNoteValue(music.getNoteValue('b'), music.getIntervalValue('p4'), 0);
-      } catch (e) {
-        ok(true, 'Invalid direction');
-      }
+    equal(Music.getRelativeNoteName('c', Music.getNoteValue('c')), 'c');
+    equal(Music.getRelativeNoteName('c', Music.getNoteValue('db')), 'c#');
+    equal(Music.getRelativeNoteName('c#', Music.getNoteValue('db')), 'c#');
+    equal(Music.getRelativeNoteName('e', Music.getNoteValue('f#')), 'e##');
+    equal(Music.getRelativeNoteName('e', Music.getNoteValue('d#')), 'eb');
+    equal(Music.getRelativeNoteName('e', Music.getNoteValue('fb')), 'e');
 
-      // Rollover
-      value = music.getRelativeNoteValue(music.getNoteValue('b'), music.getIntervalValue('b5'));
-      equal(value, 5);
+    try {
+      Music.getRelativeNoteName('e', Music.getNoteValue('g#'));
+    } catch (e) {
+      ok(true, 'Too far');
+    }
 
-      // Reverse rollover
-      value = music.getRelativeNoteValue(music.getNoteValue('c'), music.getIntervalValue('b2'), -1);
-      equal(value, 11);
+    equal(Music.getRelativeNoteName('b', Music.getNoteValue('c#')), 'b##');
+    equal(Music.getRelativeNoteName('c', Music.getNoteValue('b')), 'cb');
+  }
 
-      // Practical tests
-      value = music.getRelativeNoteValue(music.getNoteValue('g'), music.getIntervalValue('p5'));
-      equal(value, 2);
-    },
+  static canonicalNotes(): void {
+    expect(3);
 
-    relativeNoteNames: function () {
-      expect(9);
+    equal(Music.getCanonicalNoteName(0), 'c');
+    equal(Music.getCanonicalNoteName(2), 'd');
 
-      const music = new Music();
-      equal(music.getRelativeNoteName('c', music.getNoteValue('c')), 'c');
-      equal(music.getRelativeNoteName('c', music.getNoteValue('db')), 'c#');
-      equal(music.getRelativeNoteName('c#', music.getNoteValue('db')), 'c#');
-      equal(music.getRelativeNoteName('e', music.getNoteValue('f#')), 'e##');
-      equal(music.getRelativeNoteName('e', music.getNoteValue('d#')), 'eb');
-      equal(music.getRelativeNoteName('e', music.getNoteValue('fb')), 'e');
+    try {
+      Music.getCanonicalNoteName(-1);
+    } catch (e) {
+      ok(true, 'Invalid note value');
+    }
+  }
 
-      try {
-        music.getRelativeNoteName('e', music.getNoteValue('g#'));
-      } catch (e) {
-        ok(true, 'Too far');
-      }
+  static canonicalIntervals(): void {
+    expect(3);
 
-      equal(music.getRelativeNoteName('b', music.getNoteValue('c#')), 'b##');
-      equal(music.getRelativeNoteName('c', music.getNoteValue('b')), 'cb');
-    },
+    equal(Music.getCanonicalIntervalName(0), 'unison');
+    equal(Music.getCanonicalIntervalName(2), 'M2');
 
-    canonicalNotes: function () {
-      expect(3);
+    try {
+      Music.getCanonicalIntervalName(-1);
+    } catch (e) {
+      ok(true, 'Invalid interval value');
+    }
+  }
 
-      const music = new Music();
+  static scaleTones(): void {
+    expect(24);
 
-      equal(music.getCanonicalNoteName(0), 'c');
-      equal(music.getCanonicalNoteName(2), 'd');
+    // C Major
+    const manager = new KeyManager('CM');
 
-      try {
-        music.getCanonicalNoteName(-1);
-      } catch (e) {
-        ok(true, 'Invalid note value');
-      }
-    },
+    const c_major = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.major);
+    let values = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
 
-    canonicalIntervals: function () {
-      expect(3);
+    equal(c_major.length, 7);
 
-      const music = new Music();
+    for (let cm = 0; cm < c_major.length; ++cm) {
+      equal(Music.getCanonicalNoteName(c_major[cm]), values[cm]);
+    }
 
-      equal(music.getCanonicalIntervalName(0), 'unison');
-      equal(music.getCanonicalIntervalName(2), 'M2');
+    // Dorian
+    const c_dorian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.dorian);
+    values = ['c', 'd', 'eb', 'f', 'g', 'a', 'bb'];
 
-      try {
-        music.getCanonicalIntervalName(-1);
-      } catch (e) {
-        ok(true, 'Invalid interval value');
-      }
-    },
+    let note = null;
+    equal(c_dorian.length, 7);
+    for (let cd = 0; cd < c_dorian.length; ++cd) {
+      note = Music.getCanonicalNoteName(c_dorian[cd]);
+      equal(manager.selectNote(note).note, values[cd]);
+    }
 
-    scaleTones: function () {
-      expect(24);
+    // Mixolydian
+    const c_mixolydian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.mixolydian);
+    values = ['c', 'd', 'e', 'f', 'g', 'a', 'bb'];
 
-      // C Major
-      const music = new Music();
-      const manager = new KeyManager('CM');
+    equal(c_mixolydian.length, 7);
 
-      const c_major = music.getScaleTones(music.getNoteValue('c'), Music.scales.major);
-      let values = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
+    for (let i = 0; i < c_mixolydian.length; ++i) {
+      note = Music.getCanonicalNoteName(c_mixolydian[i]);
+      equal(manager.selectNote(note).note, values[i]);
+    }
+  }
 
-      equal(c_major.length, 7);
+  static scaleIntervals(): void {
+    expect(6);
 
-      for (let cm = 0; cm < c_major.length; ++cm) {
-        equal(music.getCanonicalNoteName(c_major[cm]), values[cm]);
-      }
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('c'), Music.getNoteValue('d'))),
+      'M2'
+    );
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('g'), Music.getNoteValue('c'))),
+      'p4'
+    );
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('c'), Music.getNoteValue('c'))),
+      'unison'
+    );
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('f'), Music.getNoteValue('cb'))),
+      'dim5'
+    );
 
-      // Dorian
-      const c_dorian = music.getScaleTones(music.getNoteValue('c'), Music.scales.dorian);
-      values = ['c', 'd', 'eb', 'f', 'g', 'a', 'bb'];
-
-      let note = null;
-      equal(c_dorian.length, 7);
-      for (let cd = 0; cd < c_dorian.length; ++cd) {
-        note = music.getCanonicalNoteName(c_dorian[cd]);
-        equal(manager.selectNote(note).note, values[cd]);
-      }
-
-      // Mixolydian
-      const c_mixolydian = music.getScaleTones(music.getNoteValue('c'), Music.scales.mixolydian);
-      values = ['c', 'd', 'e', 'f', 'g', 'a', 'bb'];
-
-      equal(c_mixolydian.length, 7);
-
-      for (let i = 0; i < c_mixolydian.length; ++i) {
-        note = music.getCanonicalNoteName(c_mixolydian[i]);
-        equal(manager.selectNote(note).note, values[i]);
-      }
-    },
-
-    scaleIntervals: function () {
-      expect(6);
-
-      const music = new Music();
-
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('c'), music.getNoteValue('d'))),
-        'M2'
-      );
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('g'), music.getNoteValue('c'))),
-        'p4'
-      );
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('c'), music.getNoteValue('c'))),
-        'unison'
-      );
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('f'), music.getNoteValue('cb'))),
-        'dim5'
-      );
-
-      // Forwards and backwards
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('d'), music.getNoteValue('c'), 1)),
-        'b7'
-      );
-      equal(
-        music.getCanonicalIntervalName(music.getIntervalBetween(music.getNoteValue('d'), music.getNoteValue('c'), -1)),
-        'M2'
-      );
-    },
-  };
-})();
+    // Forwards and backwards
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('d'), Music.getNoteValue('c'), 1)),
+      'b7'
+    );
+    equal(
+      Music.getCanonicalIntervalName(Music.getIntervalBetween(Music.getNoteValue('d'), Music.getNoteValue('c'), -1)),
+      'M2'
+    );
+  }
+}
