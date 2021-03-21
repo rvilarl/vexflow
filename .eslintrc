@@ -3,14 +3,10 @@
   "env": { "browser": true, "node": true },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./tsconfig.json"
+    "project": "tsconfig.json"
   },
   "plugins": [
     "@typescript-eslint",
-    "prettier"
-  ],
-  "extends": [
-    "eslint:recommended",
     "prettier"
   ],
   "rules": {
@@ -21,14 +17,23 @@
     {
       "files": [ "**/*.ts" ],
       "extends": [
+        "airbnb-typescript/base",
+        "prettier"
+      ],
+    },
+    {
+      "files": [ "src/**/*.js" ],
+      "extends": [
         "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
         "prettier"
       ]
     },
     {
       "files": [ "tests/**/*.js" ],
+      "extends": [
+        "eslint:recommended",
+        "prettier"
+      ],
       "rules": {  
         "no-console": 1, // Means warning
         "prettier/prettier": 2, // Means error

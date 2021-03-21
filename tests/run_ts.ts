@@ -1,7 +1,7 @@
-import { MusicTests } from './music_tests';
+import MusicTests from './music_tests';
 import Test from './vexflow_test_ts_helpers';
 
-export const run = function (options?: any): void {
+export function run(options?: any): void {
   if (options) {
     Test.RUN_CANVAS_TESTS = options.RUN_CANVAS_TESTS;
     Test.RUN_SVG_TESTS = options.RUN_SVG_TESTS;
@@ -11,7 +11,7 @@ export const run = function (options?: any): void {
     Test.fs = options.fs;
   }
   MusicTests.Start();
-};
+}
 
 export const Vexflow = {
   Test: {

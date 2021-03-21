@@ -83,7 +83,7 @@ module.exports = (grunt) => {
       },
     },
     eslint: {
-      target: SOURCES.concat('./tests'),
+      target: SOURCES.concat('./tests/**/*.?s'),
       options: { fix: true },
     },
     qunit: {

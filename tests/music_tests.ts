@@ -11,7 +11,7 @@ declare function test(...args: any): any;
 declare function expect(...args: any): any;
 declare function equal(...args: any): any;
 
-export class MusicTests {
+class MusicTests {
   static Start(): void {
     QUnit.module('Music');
     test('Valid Keys', this.validKeys);
@@ -226,34 +226,34 @@ export class MusicTests {
     // C Major
     const manager = new KeyManager('CM');
 
-    const c_major = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.major);
+    const cMajor = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.major);
     let values = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
 
-    equal(c_major.length, 7);
+    equal(cMajor.length, 7);
 
-    for (let cm = 0; cm < c_major.length; ++cm) {
-      equal(Music.getCanonicalNoteName(c_major[cm]), values[cm]);
+    for (let cm = 0; cm < cMajor.length; cm += 1) {
+      equal(Music.getCanonicalNoteName(cMajor[cm]), values[cm]);
     }
 
     // Dorian
-    const c_dorian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.dorian);
+    const cDorian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.dorian);
     values = ['c', 'd', 'eb', 'f', 'g', 'a', 'bb'];
 
     let note = null;
-    equal(c_dorian.length, 7);
-    for (let cd = 0; cd < c_dorian.length; ++cd) {
-      note = Music.getCanonicalNoteName(c_dorian[cd]);
+    equal(cDorian.length, 7);
+    for (let cd = 0; cd < cDorian.length; cd += 1) {
+      note = Music.getCanonicalNoteName(cDorian[cd]);
       equal(manager.selectNote(note).note, values[cd]);
     }
 
     // Mixolydian
-    const c_mixolydian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.mixolydian);
+    const cMixolydian = Music.getScaleTones(Music.getNoteValue('c'), Music.scales.mixolydian);
     values = ['c', 'd', 'e', 'f', 'g', 'a', 'bb'];
 
-    equal(c_mixolydian.length, 7);
+    equal(cMixolydian.length, 7);
 
-    for (let i = 0; i < c_mixolydian.length; ++i) {
-      note = Music.getCanonicalNoteName(c_mixolydian[i]);
+    for (let i = 0; i < cMixolydian.length; i += 1) {
+      note = Music.getCanonicalNoteName(cMixolydian[i]);
       equal(manager.selectNote(note).note, values[i]);
     }
   }
@@ -289,3 +289,5 @@ export class MusicTests {
     );
   }
 }
+
+export default MusicTests;
