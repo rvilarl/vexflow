@@ -39,10 +39,7 @@ module.exports = (grunt) => {
         libraryExport: 'default',
       },
       resolve: {
-        extensions: ['.ts', '.js', '.json'],
-        plugins: [
-          new TsconfigPathsPlugin({/* options: see below */ })
-        ]
+        extensions: ['.ts', '.js', '.json']
       },
       devtool: process.env.VEX_GENMAP || mode === 'production' ? 'source-map' : false,
       module: {
