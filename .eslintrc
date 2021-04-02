@@ -11,7 +11,7 @@
   ],
   "rules": {
     "no-console": 1, // Means warning
-    "prettier/prettier": 2 // Means error
+    "prettier/prettier": 1 // Means error
   },
   "overrides": [
     {
@@ -19,11 +19,7 @@
       "extends": [
         "eslint:recommended",
         "prettier"
-      ],
-      "rules": {
-        "no-console": 1, // Means warning
-        "prettier/prettier": 2 // Means error
-      }
+      ]
     },
     {
       "files": [ "src/**/*.js" ],
@@ -39,8 +35,6 @@
         "prettier"
       ],
       "rules": {
-        "no-console": 1, // Means warning
-        "prettier/prettier": 2, // Means error
         "no-restricted-globals": 0,
         "no-undef": 0,
         "no-undef-init": 0
