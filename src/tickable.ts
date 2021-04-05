@@ -126,7 +126,7 @@ export abstract class Tickable extends Element {
     return this;
   }
 
-  /** Returns the ticks.*/
+  /** Returns the ticks. */
   getTicks(): Fraction {
     return this.ticks;
   }
@@ -219,10 +219,9 @@ export abstract class Tickable extends Element {
    * Removes any prior tuplets from the tick calculation and
    * resets the intrinsic tick value to
    */
-  resetTuplet(tupletParam?: Tuplet): this {
+  resetTuplet(tuplet?: Tuplet): this {
     let noteCount;
     let notesOccupied;
-    let tuplet = tupletParam;
     if (tuplet) {
       const i = this.tupletStack.indexOf(tuplet);
       if (i !== -1) {
