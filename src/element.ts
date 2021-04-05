@@ -65,7 +65,7 @@ export interface RenderContext {
   measureText(text: string): { width: number };
 }
 
-//** Element style */
+/** Element style */
 export interface Style {
   shadowColor?: string;
   shadowBlur?: string;
@@ -103,7 +103,7 @@ export abstract class Element {
     return `auto${Element.ID++}`;
   }
 
-  //** Constructor, type is optional. */
+  /** Constructor, type is optional. */
   constructor() {
     this.attrs = {
       id: Element.newID(),
