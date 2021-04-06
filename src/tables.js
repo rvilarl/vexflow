@@ -32,6 +32,8 @@ const Flow = {
   IsKerned: true,
   keyProperties: keyProperties,
   integerToNote: integerToNote,
+  durationToTicks: durationToTicks,
+  getGlyphProps: getGlyphProps,
 };
 
 Flow.clefProperties = (clef) => {
@@ -701,7 +703,7 @@ Flow.durationToFraction = (duration) => new Fraction().parse(Flow.sanitizeDurati
 Flow.durationToNumber = (duration) => Flow.durationToFraction(duration).value();
 
 // Convert the `duration` to total ticks
-Flow.durationToTicks = (duration) => {
+function durationToTicks(duration) {
   duration = Flow.sanitizeDuration(duration);
 
   const ticks = Flow.durationToTicks.durations[duration];
@@ -738,7 +740,7 @@ Flow.durationAliases = {
 };
 
 // Return a glyph given duration and type. The type can be a custom glyph code from customNoteHeads.
-Flow.getGlyphProps = (duration, type) => {
+function getGlyphProps(duration, type) {
   duration = Flow.sanitizeDuration(duration);
   type = type || 'n'; // default type is a regular note
 

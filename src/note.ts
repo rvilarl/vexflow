@@ -141,6 +141,37 @@ export interface NoteDuration {
   type: string;
 }
 
+export interface DurationCode {
+  common: Type;
+  type: Record<string, Type>;
+}
+
+export interface Type extends KeyProps {
+  getWidth(scale?: number): number;
+
+  code: string;
+  code_head: string;
+  stem: boolean;
+  rest: boolean;
+  flag: boolean;
+  stem_offset: number;
+  stem_up_extension: number;
+  stem_down_extension: number;
+  tabnote_stem_up_extension: number;
+  tabnote_stem_down_extension: number;
+  dot_shiftY: number;
+  line_above: number;
+  line_below: number;
+  beam_count: number;
+  code_flag_upstem: string;
+  code_flag_downstem: string;
+  position: string;
+}
+
+export interface NameValue {
+  name: string;
+}
+
 export interface NoteRenderOptions {
   draw_stem_through_stave?: boolean;
   draw_dots?: boolean;
@@ -162,6 +193,20 @@ export interface ParsedNote {
   customTypes: string[];
   dots: number;
   ticks: number;
+}
+
+export interface KeyProps {
+  stem_down_x_offset: number;
+  stem_up_x_offset: number;
+  key: string;
+  octave: number;
+  line: number;
+  int_value: number;
+  accidental: string;
+  code: string;
+  stroke: number;
+  shift_right: number;
+  displaced: boolean;
 }
 
 export interface Space {
