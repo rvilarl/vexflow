@@ -712,7 +712,7 @@ function durationToTicks(duration) {
   }
 
   return ticks;
-};
+}
 
 Flow.durationToTicks.durations = {
   '1/2': Flow.RESOLUTION * 2,
@@ -772,7 +772,7 @@ function getGlyphProps(duration, type) {
 
   // Merge duration props for 'duration' with the note head properties.
   return { ...code.common, ...glyphTypeProperties };
-};
+}
 
 Flow.getGlyphProps.validTypes = {
   n: { name: 'note' },
