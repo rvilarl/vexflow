@@ -6,7 +6,7 @@
 import { Tuning } from '../src/tuning';
 import { QUnit, test, equal, expect } from './declarations';
 
-const TuningTests = {
+const TuningTests = { return {
   Start: function (): void {
     QUnit.module('Tuning');
     test('Standard Tuning', TuningTests.standard);
@@ -96,6 +96,6 @@ const TuningTests = {
     equal(tuning.getNoteForFret(12, 2), 'B/5', 'B string, fret 12');
     equal(tuning.getNoteForFret(0, 6), 'E/3', 'Low E string');
   },
-};
+}};
 
 export default TuningTests;
