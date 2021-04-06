@@ -11,7 +11,7 @@
 // array of them. All notes also have a rendering context and belong to a stave.
 
 import { Vex } from './vex';
-import { getGlyphProps, durationToTicks } from './tables';
+import { Flow } from './tables';
 import { Tickable } from './tickable';
 import { Stroke } from './strokes';
 import { Stave } from './stave';
@@ -22,7 +22,54 @@ import { TickContext } from './tickcontext';
 import { ModifierContext } from './modifiercontext';
 import { Modifier } from './modifier';
 import { RenderContext } from './element';
+import { Fraction } from './fraction';
 
+export const GLYPH_PROPS_VALID_TYPES: Record<string, Record<string, string>> = {
+  n: { name: 'note' },
+  r: { name: 'rest' },
+  h: { name: 'harmonic' },
+  m: { name: 'muted' },
+  s: { name: 'slash' },
+};
+
+export interface Coordinates {
+  x: number;
+  y: number;
+}
+
+export interface Font {
+  glyphs: { x_min: number; x_max: number; ha: number; o: string[] }[];
+  cssFontWeight: string;
+  ascender: number;
+  underlinePosition: number;
+  cssFontStyle: string;
+  boundingBox: { yMin: number; xMin: number; yMax: number; xMax: number };
+  resolution: number;
+  descender: number;
+  familyName: string;
+  lineHeight: number;
+  underlineThickness: number;
+  /**
+   * This property is missing in vexflow_font.js, but present in gonville_original.js and gonville_all.js.
+   */
+  original_font_information?: {
+    postscript_name: string;
+    version_string: string;
+    vendor_url: string;
+    full_font_name: string;
+    font_family_name: string;
+    copyright: string;
+    description: string;
+    trademark: string;
+    designer: string;
+    designer_url: string;
+    unique_font_identifier: string;
+    license_url: string;
+    license_description: string;
+    manufacturer_name: string;
+    font_sub_family_name: string;
+  };
+}
 export interface GlyphProps {
   code_head: string;
   dot_shiftY: number;
@@ -42,8 +89,8 @@ export interface GlyphProps {
   tabnote_stem_down_extension: number;
   tabnote_stem_up_extension: number;
   beam_count: number;
-  duration_codes: Record<string, IDurationCode>;
-  validTypes: Record<string, INameValue>;
+  duration_codes: Record<string, DurationCode>;
+  validTypes: Record<string, NameValue>;
   shift_y: number;
 
   getWidth(a?: number): number;
@@ -88,6 +135,12 @@ export interface Metrics {
   rightDisplacedHeadPx: number;
 }
 
+export interface NoteDuration {
+  duration: string;
+  dots: number;
+  type: string;
+}
+
 export interface NoteRenderOptions {
   draw_stem_through_stave?: boolean;
   draw_dots?: boolean;
@@ -103,11 +156,60 @@ export interface NoteRenderOptions {
   stroke_px?: number;
 }
 
+export interface ParsedNote {
+  duration: string;
+  type: string;
+  customTypes: string[];
+  dots: number;
+  ticks: number;
+}
+
+export interface Space {
+  mean: number;
+  deviation: number;
+  used: number;
+}
+
+export interface StaveNoteStruct {
+  ignore_ticks: boolean;
+  smooth: boolean;
+  glyph: string;
+  font: Font;
+  subscript: string;
+  superscript: string;
+  text: string;
+  positions: never[];
+  slashed: any;
+  style: any;
+  stem_down_x_offset: number;
+  stem_up_x_offset: number;
+  custom_glyph_code: any;
+  x_shift: number;
+  displaced: boolean;
+  note_type: any;
+  y: number;
+  x: number;
+  index: number;
+  line: number;
+  align_center: boolean;
+  duration_override: Fraction;
+  slash: boolean;
+  stroke_px: number;
+  glyph_font_scale: number;
+  stem_direction: number;
+  auto_stem: boolean;
+  octave_shift: number;
+  clef: string;
+  keys: string[];
+  duration: string;
+  dots: number;
+  type: string;
+}
+
 export interface TabNotePositon {
   fret: string;
   str: number;
 }
-
 
 export abstract class Note extends Tickable {
   stave?: Stave;
@@ -124,7 +226,7 @@ export abstract class Note extends Tickable {
   glyph: Glyph;
 
   customTypes: string[];
-  playNote: Note | null;
+  playNote?: Note;
 
   static get CATEGORY(): string {
     return 'note';
@@ -177,15 +279,11 @@ export abstract class Note extends Tickable {
     ctx.restore();
   }
 
-  static parseDuration(durationString: string): INoteDuration | null {
-    if (typeof durationString !== 'string') {
-      return null;
-    }
-
+  static parseDuration(durationString: string): NoteDuration | undefined {
     const regexp = /(\d*\/?\d+|[a-z])(d*)([nrhms]|$)/;
     const result = regexp.exec(durationString);
     if (!result) {
-      return null;
+      return undefined;
     }
 
     const duration = result[1];
@@ -195,20 +293,20 @@ export abstract class Note extends Tickable {
     return { duration, dots, type };
   }
 
-  static parseNoteStruct(noteStruct: IStaveNoteStruct): IParsedNote | null {
+  static parseNoteStruct(noteStruct: StaveNoteStruct): ParsedNote | undefined {
     const durationString = noteStruct.duration;
     const customTypes: string[] = [];
 
     // Preserve backwards-compatibility
     const durationProps = Note.parseDuration(durationString);
     if (!durationProps) {
-      return null;
+      return undefined;
     }
 
-    // If specified type is invalid, return null
+    // If specified type is invalid, return undefined
     let type = noteStruct.type;
     if (type && !GLYPH_PROPS_VALID_TYPES[type]) {
-      return null;
+      return undefined;
     }
 
     // If no type specified, check duration or custom types
@@ -226,21 +324,21 @@ export abstract class Note extends Tickable {
     }
 
     // Calculate the tick duration of the note
-    let ticks = durationToTicks(durationProps.duration);
-    if (ticks == null) {
-      return null;
+    let ticks = Flow.durationToTicks(durationProps.duration);
+    if (!ticks) {
+      return undefined;
     }
 
     // Are there any dots?
     const dots = noteStruct.dots ? noteStruct.dots : durationProps.dots;
     if (typeof dots !== 'number') {
-      return null;
+      return undefined;
     }
 
     // Add ticks as necessary depending on the numbr of dots
     let currentTicks = ticks;
     for (let i = 0; i < dots; i++) {
-      if (currentTicks <= 1) return null;
+      if (currentTicks <= 1) return undefined;
 
       currentTicks = currentTicks / 2;
       ticks += currentTicks;
@@ -265,7 +363,7 @@ export abstract class Note extends Tickable {
   // `duration`: The time length (e.g., `q` for quarter, `h` for half, `8` for eighth etc.)
   //
   // The range of values for these parameters are available in `src/tables.js`.
-  constructor(noteStruct: IStaveNoteStruct) {
+  constructor(noteStruct: StaveNoteStruct) {
     super();
     this.setAttribute('type', 'Note');
 
@@ -299,15 +397,15 @@ export abstract class Note extends Tickable {
     this.modifiers = [];
 
     // Get the glyph code for this note from the font.
-    this.glyph = getGlyphProps(this.duration, this.noteType);
-    this.customGlyphs = this.customTypes.map((t) => getGlyphProps(this.duration, t));
+    this.glyph = Flow.getGlyphProps(this.duration, this.noteType);
+    this.customGlyphs = this.customTypes.map((t) => Flow.getGlyphProps(this.duration, t));
 
     if (this.positions && (typeof this.positions !== 'object' || !this.positions.length)) {
       throw new Vex.RuntimeError('BadArguments', 'Note keys must be array type.');
     }
 
     // Note to play for audio players.
-    this.playNote = null;
+    this.playNote = undefined;
 
     // Positioning contexts used by the Formatter.
     this.ignore_ticks = false;
@@ -333,7 +431,7 @@ export abstract class Note extends Tickable {
 
   // Get and set the play note, which is arbitrary data that can be used by an
   // audio player.
-  getPlayNote(): Note | null {
+  getPlayNote(): Note | undefined {
     return this.playNote;
   }
 
@@ -375,7 +473,7 @@ export abstract class Note extends Tickable {
   }
 
   // Set the rendering context for the note.
-  setContext(context: IRenderContext): this {
+  setContext(context: RenderContext): this {
     this.context = context;
     return this;
   }
@@ -455,8 +553,8 @@ export abstract class Note extends Tickable {
   }
 
   // Get a `BoundingBox` for this note.
-  getBoundingBox(): BoundingBox | null {
-    return null;
+  getBoundingBox(): BoundingBox | undefined {
+    return undefined;
   }
 
   // Returns the voice that this note belongs in.
@@ -504,7 +602,7 @@ export abstract class Note extends Tickable {
   } // ignore parameters
 
   // Attach this note to a modifier context.
-  setModifierContext(mc?: ModifierContext) : this {
+  setModifierContext(mc?: ModifierContext): this {
     this.modifierContext = mc;
     return this;
   }
