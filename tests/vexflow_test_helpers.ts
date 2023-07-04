@@ -34,7 +34,7 @@ function restoreOriginalFontStack(): void {
 
 // A micro util inspired by jQuery.
 if (!global.$) {
-  // generate_png_images.js uses jsdom and does not include jQuery.
+  // generatePngImages.js uses jsdom and does not include jQuery.
   global.$ = (param: HTMLElement | string) => {
     let element: HTMLElement;
     if (typeof param !== 'string') {
@@ -176,7 +176,7 @@ export class VexFlowTests {
     });
   }
 
-  // See: generate_png_images.js
+  // See: generatePngImages.js
   // Provides access to Node JS fs & process.
   // eslint-disable-next-line
   static shims: any;

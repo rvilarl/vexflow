@@ -15,7 +15,7 @@ export interface ClefType {
 }
 
 export interface ClefAnnotatiomType extends ClefType {
-  x_shift: number;
+  xShift: number;
   point: number;
 }
 
@@ -149,13 +149,13 @@ export class Clef extends StaveModifier {
       const code = Clef.annotationSmufl[annotation];
       const point = (Clef.getPoint(this.size) / 5) * 3;
       const line = musicFont.lookupMetric(`clef_${this.size}.annotations.${annotation}.${this.type}.line`);
-      const x_shift = musicFont.lookupMetric(`clef_${this.size}.annotations.${annotation}.${this.type}.shiftX`);
+      const xShift = musicFont.lookupMetric(`clef_${this.size}.annotations.${annotation}.${this.type}.shiftX`);
 
-      this.annotation = { code, point, line, x_shift };
+      this.annotation = { code, point, line, xShift };
 
       this.attachment = new Glyph(this.annotation.code, this.annotation.point);
-      this.attachment.metrics.x_max = 0;
-      this.attachment.setXShift(this.annotation.x_shift);
+      this.attachment.metrics.xMax = 0;
+      this.attachment.setXShift(this.annotation.xShift);
     } else {
       this.annotation = undefined;
     }

@@ -40,20 +40,20 @@ function basic(assert: Assert): void {
   assert.strictEqual(f_05.toString(), '0.5/1', 'Fraction: f_05.toString() === "0.5/1"');
   assert.strictEqual(f_05.toSimplifiedString(), '1/2', 'Fraction: f_05.toSimplifiedString() === "1/2"');
 
-  const tF_n = f_05.clone();
-  assert.notStrictEqual(tF_n, f_05, 'Fraction: tF_n !== f_05');
-  assert.notEqual(tF_n, f_05, 'Fraction: tF_n != f_05');
-  assert.deepEqual(tF_n, f_05, 'tF_n deepEqual f_05');
-  assert.notDeepEqual(tF_n, {}, 'tF_n notDeepEqual {}');
+  const tFN = f_05.clone();
+  assert.notStrictEqual(tFN, f_05, 'Fraction: tFN !== f_05');
+  assert.notEqual(tFN, f_05, 'Fraction: tFN != f_05');
+  assert.deepEqual(tFN, f_05, 'tFN deepEqual f_05');
+  assert.notDeepEqual(tFN, {}, 'tFN notDeepEqual {}');
 
-  tF_n.subtract(-0.5);
-  assert.ok(tF_n.equals(1), 'Fraction: 0.5 -(-0.5) equals 1');
-  tF_n.add(1);
-  assert.ok(tF_n.equals(2), 'Fraction: 1 + 1 equals 2');
-  tF_n.multiply(2);
-  assert.ok(tF_n.equals(4), 'Fraction: 2 * 2 equals 4');
-  tF_n.divide(2);
-  assert.ok(tF_n.equals(2), 'Fraction: 4 / 2 equals 2');
+  tFN.subtract(-0.5);
+  assert.ok(tFN.equals(1), 'Fraction: 0.5 -(-0.5) equals 1');
+  tFN.add(1);
+  assert.ok(tFN.equals(2), 'Fraction: 1 + 1 equals 2');
+  tFN.multiply(2);
+  assert.ok(tFN.equals(4), 'Fraction: 2 * 2 equals 4');
+  tFN.divide(2);
+  assert.ok(tFN.equals(2), 'Fraction: 4 / 2 equals 2');
 
   // Lowest common multiple.
   assert.equal(Fraction.LCMM([]), 0);

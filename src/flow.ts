@@ -318,7 +318,7 @@ export class Flow {
   static set STEM_WIDTH(value: number) {
     Tables.STEM_WIDTH = value;
   }
-  static get TIME4_4(): { num_beats: number; beat_value: number; resolution: number } {
+  static get TIME4_4(): { numBeats: number; beatValue: number; resolution: number } {
     return Tables.TIME4_4;
   }
   static get accidentalMap(): Record<string, { code: string; parenRightPaddingAdjustment: number }> {
@@ -336,7 +336,7 @@ export class Flow {
   static getKeySignatures(): Record<string, { acc?: string; num: number }> {
     return Tables.getKeySignatures();
   }
-  static clefProperties(clef: string): { line_shift: number } {
+  static clefProperties(clef: string): { lineShift: number } {
     return Tables.clefProperties(clef);
   }
   // eslint-disable-next-line

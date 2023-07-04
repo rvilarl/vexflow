@@ -201,34 +201,34 @@ function scaleTones(assert: Assert): void {
   const music = new Music();
   const manager = new KeyManager('CM');
 
-  const c_major = music.getScaleTones(music.getNoteValue('c'), Music.scales.major);
+  const cMajor = music.getScaleTones(music.getNoteValue('c'), Music.scales.major);
   let values = ['c', 'd', 'e', 'f', 'g', 'a', 'b'];
 
-  assert.equal(c_major.length, 7);
+  assert.equal(cMajor.length, 7);
 
-  for (let i = 0; i < c_major.length; ++i) {
-    assert.equal(music.getCanonicalNoteName(c_major[i]), values[i]);
+  for (let i = 0; i < cMajor.length; ++i) {
+    assert.equal(music.getCanonicalNoteName(cMajor[i]), values[i]);
   }
 
   // Dorian
-  const c_dorian = music.getScaleTones(music.getNoteValue('c'), Music.scales.dorian);
+  const cDorian = music.getScaleTones(music.getNoteValue('c'), Music.scales.dorian);
   values = ['c', 'd', 'eb', 'f', 'g', 'a', 'bb'];
 
   let note = null;
-  assert.equal(c_dorian.length, 7);
-  for (let i = 0; i < c_dorian.length; ++i) {
-    note = music.getCanonicalNoteName(c_dorian[i]);
+  assert.equal(cDorian.length, 7);
+  for (let i = 0; i < cDorian.length; ++i) {
+    note = music.getCanonicalNoteName(cDorian[i]);
     assert.equal(manager.selectNote(note).note, values[i]);
   }
 
   // Mixolydian
-  const c_mixolydian = music.getScaleTones(music.getNoteValue('c'), Music.scales.mixolydian);
+  const cMixolydian = music.getScaleTones(music.getNoteValue('c'), Music.scales.mixolydian);
   values = ['c', 'd', 'e', 'f', 'g', 'a', 'bb'];
 
-  assert.equal(c_mixolydian.length, 7);
+  assert.equal(cMixolydian.length, 7);
 
-  for (let i = 0; i < c_mixolydian.length; ++i) {
-    note = music.getCanonicalNoteName(c_mixolydian[i]);
+  for (let i = 0; i < cMixolydian.length; ++i) {
+    note = music.getCanonicalNoteName(cMixolydian[i]);
     assert.equal(manager.selectNote(note).note, values[i]);
   }
 }

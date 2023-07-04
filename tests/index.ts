@@ -10,7 +10,7 @@
 //   VexFlowTests.register(AnnotationTests);
 //   export { AnnotationTests };
 //
-// In vexflow_test_helpers.ts: VexFlowTests.run() will run all registered tests.
+// In vexflowTestHelpers.ts: VexFlowTests.run() will run all registered tests.
 //
 // To iterate faster during development, you can comment out most of this file
 // and focus on just testing the module(s) you are currently working on.

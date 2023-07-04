@@ -61,10 +61,10 @@ function tieNotes(notes: Note[], indices: number[], stave: Stave, ctx: RenderCon
 
   const tie = new TabTie(
     {
-      first_note: notes[0],
-      last_note: notes[1],
-      first_indices: indices,
-      last_indices: indices,
+      firstNote: notes[0],
+      lastNote: notes[1],
+      firstIndices: indices,
+      lastIndices: indices,
     },
     text ?? 'Annotation'
   );
@@ -143,10 +143,10 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   voice.draw(context, stave);
 
   createTabTie({
-    first_note: notes[0],
-    last_note: notes[1],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[0],
+    lastNote: notes[1],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();
@@ -154,10 +154,10 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   options.assert.ok(true, 'Single note');
 
   createTabTie({
-    first_note: notes[2],
-    last_note: notes[3],
-    first_indices: [0, 1],
-    last_indices: [0, 1],
+    firstNote: notes[2],
+    lastNote: notes[3],
+    firstIndices: [0, 1],
+    lastIndices: [0, 1],
   })
     .setContext(context)
     .draw();
@@ -165,10 +165,10 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   options.assert.ok(true, 'Chord');
 
   createTabTie({
-    first_note: notes[4],
-    last_note: notes[5],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[4],
+    lastNote: notes[5],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();
@@ -176,10 +176,10 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   options.assert.ok(true, 'Single note high-fret');
 
   createTabTie({
-    first_note: notes[6],
-    last_note: notes[7],
-    first_indices: [0, 1],
-    last_indices: [0, 1],
+    firstNote: notes[6],
+    lastNote: notes[7],
+    firstIndices: [0, 1],
+    lastIndices: [0, 1],
   })
     .setContext(context)
     .draw();
@@ -213,19 +213,19 @@ function continuous(options: TestOptions, contextBuilder: ContextBuilder): void 
   voice.draw(context, stave);
 
   TabTie.createHammeron({
-    first_note: notes[0],
-    last_note: notes[1],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[0],
+    lastNote: notes[1],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();
 
   TabTie.createPulloff({
-    first_note: notes[1],
-    last_note: notes[2],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[1],
+    lastNote: notes[2],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();

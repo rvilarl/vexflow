@@ -34,10 +34,10 @@ function tieNotes(notes: TabNote[], indices: number[], stave: TabStave, ctx: Ren
 
   const tie = new TabSlide(
     {
-      first_note: notes[0],
-      last_note: notes[1],
-      first_indices: indices,
-      last_indices: indices,
+      firstNote: notes[0],
+      lastNote: notes[1],
+      firstIndices: indices,
+      lastIndices: indices,
     },
     TabSlide.SLIDE_UP
   );
@@ -125,10 +125,10 @@ function multiTest(options: TestOptions, buildTabSlide: (notes: TieNotes) => Tab
   voice.draw(context, stave);
 
   buildTabSlide({
-    first_note: notes[0],
-    last_note: notes[1],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[0],
+    lastNote: notes[1],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();
@@ -136,10 +136,10 @@ function multiTest(options: TestOptions, buildTabSlide: (notes: TieNotes) => Tab
   options.assert.ok(true, 'Single note');
 
   buildTabSlide({
-    first_note: notes[2],
-    last_note: notes[3],
-    first_indices: [0, 1],
-    last_indices: [0, 1],
+    firstNote: notes[2],
+    lastNote: notes[3],
+    firstIndices: [0, 1],
+    lastIndices: [0, 1],
   })
     .setContext(context)
     .draw();
@@ -147,10 +147,10 @@ function multiTest(options: TestOptions, buildTabSlide: (notes: TieNotes) => Tab
   options.assert.ok(true, 'Chord');
 
   buildTabSlide({
-    first_note: notes[4],
-    last_note: notes[5],
-    first_indices: [0],
-    last_indices: [0],
+    firstNote: notes[4],
+    lastNote: notes[5],
+    firstIndices: [0],
+    lastIndices: [0],
   })
     .setContext(context)
     .draw();
@@ -158,10 +158,10 @@ function multiTest(options: TestOptions, buildTabSlide: (notes: TieNotes) => Tab
   options.assert.ok(true, 'Single note high-fret');
 
   buildTabSlide({
-    first_note: notes[6],
-    last_note: notes[7],
-    first_indices: [0, 1],
-    last_indices: [0, 1],
+    firstNote: notes[6],
+    lastNote: notes[7],
+    firstIndices: [0, 1],
+    lastIndices: [0, 1],
   })
     .setContext(context)
     .draw();

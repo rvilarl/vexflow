@@ -28,7 +28,7 @@ export class ClefNote extends Note {
     this.setWidth(Glyph.getWidth(this.clef.code, Clef.getPoint(this.size), `clefNote_${this.size}`));
 
     // Note properties
-    this.ignore_ticks = true;
+    this.ignoreTicks = true;
   }
 
   /** Set clef type, size and annotation. */
@@ -58,9 +58,9 @@ export class ClefNote extends Note {
     const ctx = this.checkContext();
 
     this.setRendered();
-    const abs_x = this.getAbsoluteX();
+    const absX = this.getAbsoluteX();
 
-    Glyph.renderGlyph(ctx, abs_x, stave.getYForLine(this.clef.line), Clef.getPoint(this.size), this.clef.code, {
+    Glyph.renderGlyph(ctx, absX, stave.getYForLine(this.clef.line), Clef.getPoint(this.size), this.clef.code, {
       category: `clefNote_${this.size}`,
     });
 
@@ -70,8 +70,8 @@ export class ClefNote extends Note {
       attachment.setContext(ctx);
       attachment.setStave(stave);
       attachment.setYShift(stave.getYForLine(this.annotation.line) - stave.getYForGlyphs());
-      attachment.setXShift(this.annotation.x_shift);
-      attachment.renderToStave(abs_x);
+      attachment.setXShift(this.annotation.xShift);
+      attachment.renderToStave(absX);
     }
   }
 }
