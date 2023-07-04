@@ -2,7 +2,7 @@
 // MIT License
 // @author Gregory Ristow (2015)
 
-import { Font, FontInfo, FontStyle, FontWeight } from './font';
+import { Font, FontInfo } from './font';
 import { GroupAttributes, RenderContext, TextMeasure } from './rendercontext';
 import { Tables } from './tables';
 import { normalizeAngle, prefix, RuntimeError } from './util';
@@ -53,62 +53,10 @@ export interface State {
   lineWidth: number;
 }
 
-class MeasureTextCache {
-  protected txt?: SVGTextElement;
-
-  // The cache is keyed first by the text string, then by the font attributes
-  // joined together.
-  protected cache: Record<string, Record<string, TextMeasure>> = {};
-
-  lookup(text: string, svg: SVGSVGElement, attributes: Attributes): TextMeasure {
-    let entries = this.cache[text];
-    if (entries === undefined) {
-      entries = {};
-      this.cache[text] = entries;
-    }
-
-    const family = attributes['font-family'];
-    const size = attributes['font-size'];
-    const weight = attributes['font-weight'];
-    const style = attributes['font-style'];
-
-    const key = `${family}%${size}%${weight}%${style}`;
-    let entry = entries[key];
-    if (entry === undefined) {
-      entry = this.measureImpl(text, svg, attributes);
-      entries[key] = entry;
-    }
-    return entry;
-  }
-
-  measureImpl(text: string, svg: SVGSVGElement, attributes: Attributes): TextMeasure {
-    let txt = this.txt;
-    if (!txt) {
-      // Create the SVG text element that will be used to measure text in the event
-      // of a cache miss.
-      txt = document.createElementNS(SVG_NS, 'text');
-      this.txt = txt;
-    }
-
-    txt.textContent = text;
-    if (attributes['font-family']) txt.setAttributeNS(null, 'font-family', attributes['font-family']);
-    if (attributes['font-size']) txt.setAttributeNS(null, 'font-size', `${attributes['font-size']}`);
-    if (attributes['font-style']) txt.setAttributeNS(null, 'font-style', attributes['font-style']);
-    if (attributes['font-weight']) txt.setAttributeNS(null, 'font-weight', `${attributes['font-weight']}`);
-    svg.appendChild(txt);
-    const bbox = txt.getBBox();
-    svg.removeChild(txt);
-
-    return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height };
-  }
-}
-
 /**
  * SVG rendering context with an API similar to CanvasRenderingContext2D.
  */
 export class SVGContext extends RenderContext {
-  protected static measureTextCache = new MeasureTextCache();
-
   element: HTMLElement; // the parent DOM object
   svg: SVGSVGElement;
   width: number = 0;
@@ -155,10 +103,10 @@ export class SVGContext extends RenderContext {
     this.lineWidth = 1.0;
 
     const defaultFontAttributes = {
-      'font-family': Font.SANS_SERIF,
-      'font-size': Font.SIZE + 'pt',
-      'font-weight': FontWeight.NORMAL,
-      'font-style': FontStyle.NORMAL,
+      'font-family': Tables.lookupMetric('fontFamily'),
+      'font-size': Tables.lookupMetric('fontSize') + 'pt',
+      'font-weight': 'normal',
+      'font-style': 'normal',
     };
 
     this.state = {
@@ -228,6 +176,14 @@ export class SVGContext extends RenderContext {
     this.groups.pop();
     this.groupAttributes.pop();
     this.parent = this.groups[this.groups.length - 1];
+  }
+
+  openRotation(angle: number, x: number, y: number) {
+    this.openGroup().setAttribute('transform', `translate(${x},${y}) rotate(${angle}) translate(-${x},-${y})`);
+  }
+
+  closeRotation() {
+    this.closeGroup();
   }
 
   add(elem: SVGElement): void {
@@ -590,7 +546,12 @@ export class SVGContext extends RenderContext {
 
   // ## Text Methods:
   measureText(text: string): TextMeasure {
-    return SVGContext.measureTextCache.lookup(text, this.svg, this.attributes);
+    return Font.measureText(text, {
+      family: this.attributes['font-family'],
+      size: this.attributes['font-size'],
+      weight: this.attributes['font-weight'],
+      style: this.attributes['font-style'],
+    });
   }
 
   fillText(text: string, x: number, y: number): this {

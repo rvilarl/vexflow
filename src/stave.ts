@@ -80,14 +80,12 @@ export class Stave extends Element {
   // This is the sum of the padding that normally goes on left + right of a stave during
   // drawing. Used to size staves correctly with content width.
   static get defaultPadding(): number {
-    const musicFont = Tables.currentMusicFont();
-    return musicFont.lookupMetric('stave.padding') + musicFont.lookupMetric('stave.endPaddingMax');
+    return Tables.lookupMetric('stave.padding') + Tables.lookupMetric('stave.endPaddingMax');
   }
 
   // Right padding, used by system if startX is already determined.
   static get rightPadding(): number {
-    const musicFont = Tables.currentMusicFont();
-    return musicFont.lookupMetric('stave.endPaddingMax');
+    return Tables.lookupMetric('stave.endPaddingMax');
   }
 
   constructor(x: number, y: number, width: number, options?: StaveOptions) {
@@ -572,12 +570,6 @@ export class Stave extends Element {
 
   addEndTimeSignature(timeSpec: string, customPadding?: number): this {
     this.addTimeSignature(timeSpec, customPadding, StaveModifierPosition.END);
-    return this;
-  }
-
-  // Deprecated
-  addTrebleGlyph(): this {
-    this.addClef('treble');
     return this;
   }
 

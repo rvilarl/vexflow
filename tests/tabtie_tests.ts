@@ -44,7 +44,7 @@ function setupContext(options: TestOptions, w: number = 0, h: number = 0): { con
 
   context.setFont('Arial', VexFlowTests.Font.size);
 
-  const stave = new TabStave(10, 10, w || 350).addTabGlyph().setContext(context).draw();
+  const stave = new TabStave(10, 10, w || 350).addClef('tab').setContext(context).draw();
 
   return { context, stave };
 }

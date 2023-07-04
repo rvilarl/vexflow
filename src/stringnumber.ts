@@ -27,26 +27,18 @@ export class StringNumber extends Modifier {
   }
 
   static get metrics(): StringNumberMetrics {
-    return (
-      Tables.currentMusicFont().getMetrics().stringNumber ?? {
-        verticalPadding: 0,
-        stemPadding: 0,
-        leftPadding: 0,
-        rightPadding: 0,
-      }
-    );
+    return Tables.lookupMetric('stringNumber', {
+      verticalPadding: 0,
+      stemPadding: 0,
+      leftPadding: 0,
+      rightPadding: 0,
+    });
   }
 
   // ## Static Methods
   // Arrange string numbers inside a `ModifierContext`
   static format(nums: StringNumber[], state: ModifierContextState): boolean {
-    /**
-     * The modifier context's leftShift state.
-     */
     const leftShift = state.leftShift;
-    /**
-     * The modifier context's rightShift state.
-     */
     const rightShift = state.rightShift;
     const numSpacing = 1;
 
@@ -54,7 +46,7 @@ export class StringNumber extends Modifier {
 
     const numsList = [];
     let prevNote = null;
-    let extraXSpaceForDisplacedNotehead = 0;
+    let shiftLeft = 0;
     let shiftRight = 0;
     const modLines = 0;
 
@@ -82,8 +74,8 @@ export class StringNumber extends Modifier {
 
       if (note !== prevNote) {
         for (let n = 0; n < note.keys.length; ++n) {
-          if (pos === Modifier.Position.LEFT) {
-            extraXSpaceForDisplacedNotehead = Math.max(note.getLeftDisplacedHeadPx(), extraXSpaceForDisplacedNotehead);
+          if (leftShift === 0) {
+            shiftLeft = Math.max(note.getLeftDisplacedHeadPx(), shiftLeft);
           }
           if (rightShift === 0) {
             shiftRight = Math.max(note.getRightDisplacedHeadPx(), shiftRight);
@@ -99,7 +91,7 @@ export class StringNumber extends Modifier {
         note,
         num,
         line: glyphLine,
-        shiftL: extraXSpaceForDisplacedNotehead,
+        shiftL: shiftLeft,
         shiftR: shiftRight,
       });
     }
@@ -113,6 +105,7 @@ export class StringNumber extends Modifier {
     let lastLine = null;
     let lastNote = null;
     for (let i = 0; i < numsList.length; ++i) {
+      let numShift = 0;
       const note = numsList[i].note;
       const pos = numsList[i].pos;
       const num = numsList[i].num;
@@ -124,15 +117,14 @@ export class StringNumber extends Modifier {
       }
 
       const numWidth = num.getWidth() + numSpacing;
-      let numXShift = 0;
       if (pos === Modifier.Position.LEFT) {
-        num.setXShift(leftShift + extraXSpaceForDisplacedNotehead);
-        numXShift = numWidth; // spacing
-        xWidthL = Math.max(numXShift, xWidthL);
+        num.setXShift(leftShift);
+        numShift = shiftLeft + numWidth; // spacing
+        xWidthL = numShift > xWidthL ? numShift : xWidthL;
       } else if (pos === Modifier.Position.RIGHT) {
         num.setXShift(numShiftR);
-        numXShift += numWidth; // spacing
-        xWidthR = numXShift > xWidthR ? numXShift : xWidthR;
+        numShift += numWidth; // spacing
+        xWidthR = numShift > xWidthR ? numShift : xWidthR;
       }
       lastLine = line;
       lastNote = note;

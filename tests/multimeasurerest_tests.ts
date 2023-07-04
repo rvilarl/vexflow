@@ -8,6 +8,7 @@ import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 import { Flow } from '../src/flow';
 import { Font } from '../src/font';
 import { MultimeasureRestRenderOptions } from '../src/multimeasurerest';
+import { Tables } from '../src/tables';
 
 const MultiMeasureRestTests = {
   Start(): void {
@@ -65,7 +66,7 @@ function simple(options: TestOptions): void {
         spacingBetweenLinesPx: 15,
         useSymbols: true,
         numberGlyphPoint: 40 * 1.5,
-        semibreveRestGlyphScale: Flow.NOTATION_FONT_SCALE * 1.5,
+        semibreveRestGlyphScale: Tables.lookupMetric('fontSize') * 1.5,
       },
     ],
   ];
@@ -96,7 +97,7 @@ function simple(options: TestOptions): void {
   const str = 'TACET';
   const context = f.getContext();
   context.save();
-  context.setFont(Font.SERIF, 16, 'bold');
+  context.setFont(Tables.lookupMetric('fontFamily'), 16, 'bold');
   const metrics = context.measureText(str);
   context.fillText(str, xs.left + (xs.right - xs.left) * 0.5 - metrics.width * 0.5, strY);
   context.restore();

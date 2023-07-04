@@ -74,11 +74,6 @@ export class ModifierContext {
   protected width: number = 0;
   protected spacing: number = 0;
 
-  addModifier(member: ModifierContextMember): this {
-    L('addModifier is deprecated, use addMember instead.');
-    return this.addMember(member);
-  }
-
   /**
    * this.members maps CATEGORY strings to arrays of Tickable | Modifier | StaveNote | TabNote.
    * Here we add a new member to this.members, and create a new array if needed.
@@ -94,14 +89,6 @@ export class ModifierContext {
     member.setModifierContext(this);
     this.preFormatted = false;
     return this;
-  }
-
-  /**
-   * @deprecated
-   */
-  getModifiers(category: string): ModifierContextMember[] {
-    L('getModifiers is deprecated, use getMembers instead.');
-    return this.getMembers(category);
   }
 
   getMembers(category: string): ModifierContextMember[] {

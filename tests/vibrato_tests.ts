@@ -5,7 +5,9 @@
 
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
-import { Bend, ContextBuilder, Font, Formatter, TabNote, TabNoteStruct, TabStave, Vibrato } from '../src/index';
+import { Bend, ContextBuilder, Formatter, TabNote, TabNoteStruct, TabStave, Vibrato } from '../src/index';
+
+import { Tables } from '../src/tables';
 
 const VibratoTests = {
   Start(): void {
@@ -28,7 +30,7 @@ function simple(options: TestOptions, contextBuilder: ContextBuilder): void {
   ctx.scale(1.5, 1.5);
 
   ctx.font = '10pt Arial';
-  const stave = new TabStave(10, 10, 450).addTabGlyph().setContext(ctx).draw();
+  const stave = new TabStave(10, 10, 450).addClef('tab').setContext(ctx).draw();
 
   const notes = [
     tabNote({
@@ -58,7 +60,7 @@ function harsh(options: TestOptions, contextBuilder: ContextBuilder): void {
   ctx.scale(1.5, 1.5);
 
   ctx.font = '10pt Arial';
-  const stave = new TabStave(10, 10, 450).addTabGlyph().setContext(ctx).draw();
+  const stave = new TabStave(10, 10, 450).addClef('tab').setContext(ctx).draw();
 
   const notes = [
     tabNote({
@@ -82,8 +84,8 @@ function withBend(options: TestOptions, contextBuilder: ContextBuilder): void {
   const ctx = contextBuilder(options.elementId, 500, 240);
   ctx.scale(1.3, 1.3);
 
-  ctx.setFont(Font.SANS_SERIF, VexFlowTests.Font.size);
-  const stave = new TabStave(10, 10, 450).addTabGlyph().setContext(ctx).draw();
+  ctx.setFont(Tables.lookupMetric('fontFamily'), VexFlowTests.Font.size);
+  const stave = new TabStave(10, 10, 450).addClef('tab').setContext(ctx).draw();
 
   const notes = [
     tabNote({
@@ -93,14 +95,26 @@ function withBend(options: TestOptions, contextBuilder: ContextBuilder): void {
       ],
       duration: 'q',
     })
-      .addModifier(new Bend('1/2', true), 0)
-      .addModifier(new Bend('1/2', true), 1)
+      .addModifier(
+        new Bend([
+          { type: Bend.UP, text: '1/2' },
+          { type: Bend.DOWN, text: '' },
+        ]),
+        0
+      )
+      .addModifier(
+        new Bend([
+          { type: Bend.UP, text: '1/2' },
+          { type: Bend.DOWN, text: '' },
+        ]),
+        1
+      )
       .addModifier(new Vibrato(), 0),
     tabNote({
       positions: [{ str: 2, fret: 10 }],
       duration: 'q',
     })
-      .addModifier(new Bend('Full', false), 0)
+      .addModifier(new Bend([{ type: Bend.UP, text: 'Full' }]), 0)
       .addModifier(new Vibrato().setVibratoWidth(60), 0),
     tabNote({
       positions: [{ str: 2, fret: 10 }],

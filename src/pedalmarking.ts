@@ -2,7 +2,6 @@
 // MIT License
 
 import { Element } from './element';
-import { Glyph } from './glyph';
 import { RenderContext } from './rendercontext';
 import { StaveNote } from './stavenote';
 import { Tables } from './tables';
@@ -19,11 +18,11 @@ function L(...args: any[]) {
  * at the coordinates `x` and `y. Takes into account the glyph data
  * coordinate shifts.
  */
-function drawPedalGlyph(name: string, context: RenderContext, x: number, y: number, point: number): void {
-  const glyphData = PedalMarking.GLYPHS[name];
-  const glyph = new Glyph(glyphData.code, point, { category: 'pedalMarking' });
-  // Center the middle of the glyph with the middle of the note head (Tables.STAVE_LINE_DISTANCE / 2)
-  glyph.render(context, x - (glyph.getMetrics().width - Tables.STAVE_LINE_DISTANCE) / 2, y);
+function drawPedalGlyph(name: string, ctx: RenderContext, x: number, y: number, point: number): void {
+  const glyph = new Element();
+  glyph.setText(String.fromCharCode(parseInt(PedalMarking.GLYPHS[name] || name, 16)));
+  glyph.measureText();
+  glyph.renderText(ctx, x - (glyph.getWidth() - Tables.STAVE_LINE_DISTANCE) / 2, y);
 }
 
 /**
@@ -55,13 +54,9 @@ export class PedalMarking extends Element {
   protected notes: StaveNote[];
 
   /** Glyph data */
-  static readonly GLYPHS: Record<string, { code: string }> = {
-    pedalDepress: {
-      code: 'keyboardPedalPed',
-    },
-    pedalRelease: {
-      code: 'keyboardPedalUp',
-    },
+  static readonly GLYPHS: Record<string, string > = {
+    pedalDepress: 'E650' /*keyboardPedalPed*/,
+    pedalRelease: 'E655' /*keyboardPedalUp*/,
   };
 
   /** Pedal type as number. */
@@ -177,8 +172,7 @@ export class PedalMarking extends Element {
 
       let xShift = 0;
       const point =
-        Tables.currentMusicFont().lookupMetric(`pedalMarking.${isPedalDepressed ? 'down' : 'up'}.point`) ??
-        Tables.NOTATION_FONT_SCALE;
+        Tables.lookupMetric(`pedalMarking.${isPedalDepressed ? 'down' : 'up'}.point`) ?? Tables.lookupMetric('fontSize');
 
       if (isPedalDepressed) {
         // Adjustment for release+depress
@@ -239,8 +233,7 @@ export class PedalMarking extends Element {
       const y = stave.getYForBottomText(this.line + 3);
 
       const point =
-        Tables.currentMusicFont().lookupMetric(`pedalMarking.${isPedalDepressed ? 'down' : 'up'}.point`) ??
-        Tables.NOTATION_FONT_SCALE;
+        Tables.lookupMetric(`pedalMarking.${isPedalDepressed ? 'down' : 'up'}.point`) ?? Tables.lookupMetric('fontSize');
 
       let textWidth = 0;
       if (isPedalDepressed) {

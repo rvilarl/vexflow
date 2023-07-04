@@ -3,7 +3,7 @@
 //
 // Basic Stave Tests
 
-// TODO: Like Stave.setTempo(t: StaveTempoOptions, ...), Stave.setText(...) could declare an interface called StaveTextOptions.
+// TODO: Like Stave.setTempo(t: StaveTempoOptions, ...), Stave.setStaveText(...) could declare an interface called StaveTextOptions.
 //       This helps developers because they can use the named type in their code for type checking.
 
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';

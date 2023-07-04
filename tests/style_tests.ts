@@ -112,7 +112,7 @@ function tab(options: TestOptions, contextBuilder: ContextBuilder): void {
   const ctx = contextBuilder(options.elementId, 500, 140);
 
   ctx.font = '10pt Arial';
-  const stave = new TabStave(10, 10, 450).addTabGlyph();
+  const stave = new TabStave(10, 10, 450).addClef('tab');
   stave.getModifiers()[2].setStyle(FS('blue'));
   stave.setContext(ctx).draw();
 
@@ -133,7 +133,7 @@ function tab(options: TestOptions, contextBuilder: ContextBuilder): void {
       ],
       duration: 'h',
     })
-      .addModifier(new Bend('Full').setStyle(FS('brown')), 0)
+      .addModifier(new Bend([{ type: Bend.UP, text: 'Full' }]).setStyle(FS('brown')), 0)
       .addStroke(0, new Stroke(1, { allVoices: false }).setStyle(FS('blue'))),
   ];
 

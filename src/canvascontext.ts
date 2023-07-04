@@ -43,14 +43,12 @@ export class CanvasContext extends RenderContext {
   /**  The 2D rendering context from the Canvas API. Forward method calls to this object. */
   context2D: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
+  curTransfrom: DOMMatrix;
   /**
    * The HTMLCanvasElement or OffscreenCanvas that is associated with the above context.
    * If there was no associated `<canvas>` element, just store the default WIDTH / HEIGHT.
    */
   canvas: HTMLCanvasElement | OffscreenCanvas | { width: number; height: number };
-
-  /** Height of one line of text (in pixels). */
-  textHeight: number = 0;
 
   static get WIDTH(): number {
     return 600;
@@ -85,6 +83,7 @@ export class CanvasContext extends RenderContext {
   constructor(context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
     super();
     this.context2D = context;
+    this.curTransfrom = context.getTransform();
     if (!context.canvas) {
       this.canvas = {
         width: CanvasContext.WIDTH,
@@ -109,6 +108,17 @@ export class CanvasContext extends RenderContext {
 
   closeGroup(): void {
     // Containers not implemented.
+  }
+
+  openRotation(angle: number, x: number, y: number) {
+    this.curTransfrom = this.context2D.getTransform();
+    this.context2D.translate(x,y);
+    this.context2D.rotate((angle * Math.PI) / 180);
+    this.context2D.translate(-x, -y);
+  }
+
+  closeRotation() {
+    this.context2D.setTransform(this.curTransfrom);
   }
 
   // eslint-disable-next-line
@@ -169,19 +179,19 @@ export class CanvasContext extends RenderContext {
     return this;
   }
 
-  resize(width: number, height: number, devicePixelRatio?: number): this {
+  resize(width: number, height: number): this {
     const canvas = this.context2D.canvas;
-    const dpr: number = devicePixelRatio ?? globalObject().devicePixelRatio ?? 1;
+    const devicePixelRatio = globalObject().devicePixelRatio || 1;
 
     // Scale the canvas size by the device pixel ratio clamping to the maximum supported size.
-    [width, height] = CanvasContext.sanitizeCanvasDims(width * dpr, height * dpr);
+    [width, height] = CanvasContext.sanitizeCanvasDims(width * devicePixelRatio, height * devicePixelRatio);
 
     // Divide back down by the pixel ratio and convert to integers.
-    width = (width / dpr) | 0;
-    height = (height / dpr) | 0;
+    width = (width / devicePixelRatio) | 0;
+    height = (height / devicePixelRatio) | 0;
 
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = width * devicePixelRatio;
+    canvas.height = height * devicePixelRatio;
 
     // The canvas could be an instance of either HTMLCanvasElement or an OffscreenCanvas.
     // Only HTMLCanvasElement has a style attribute.
@@ -190,7 +200,7 @@ export class CanvasContext extends RenderContext {
       canvas.style.height = height + 'px';
     }
 
-    return this.scale(dpr, dpr);
+    return this.scale(devicePixelRatio, devicePixelRatio);
   }
 
   rect(x: number, y: number, width: number, height: number): this {
@@ -319,7 +329,6 @@ export class CanvasContext extends RenderContext {
   setFont(f?: string | FontInfo, size?: string | number, weight?: string | number, style?: string): this {
     const fontInfo = Font.validate(f, size, weight, style);
     this.context2D.font = Font.toCSSString(fontInfo);
-    this.textHeight = Font.convertSizeToPixelValue(fontInfo.size);
     return this;
   }
 

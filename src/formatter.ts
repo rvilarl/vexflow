@@ -3,7 +3,6 @@
 
 import { Beam } from './beam';
 import { BoundingBox } from './boundingbox';
-import { Font } from './font';
 import { Fraction } from './fraction';
 import { ModifierContext } from './modifiercontext';
 import { RenderContext } from './rendercontext';
@@ -169,7 +168,7 @@ function getRestLineForNextNoteGroup(
  * Finally, the formatter distributes the left over space proportionally to
  * all the ticks, setting the `x` values of the notes in each tick.
  *
- * See `tests/formatter_tests.ts` for usage examples. The helper functions included
+ * See `tests/formatterTests.ts` for usage examples. The helper functions included
  * here (`FormatAndDraw`, `FormatAndDrawTab`) also serve as useful usage examples.
  */
 export class Formatter {
@@ -216,7 +215,7 @@ export class Formatter {
     options?: { stavePadding: number }
   ): void {
     options = {
-      stavePadding: Tables.currentMusicFont().lookupMetric('stave.padding'),
+      stavePadding: Tables.lookupMetric('stave.padding'),
       ...options,
     };
 
@@ -232,7 +231,7 @@ export class Formatter {
     }
 
     ctx.save();
-    ctx.setFont(Font.SANS_SERIF, 8);
+    ctx.setFont(Tables.lookupMetric('fontFamily'), 8);
 
     contextGaps.gaps.forEach((gap) => {
       stroke(x + gap.x1, x + gap.x2, 'rgba(100,200,100,0.4)');
@@ -372,12 +371,6 @@ export class Formatter {
           return;
         }
 
-        // If activated rests not on default can be rendered as specified.
-        const position = currTickable.getGlyphProps().position.toUpperCase();
-        if (position !== 'R/4' && position !== 'B/4') {
-          return;
-        }
-
         if (alignAllNotes || currTickable.getBeam()) {
           // Align rests with previous/next notes.
           const props = currTickable.getKeyProps()[0];
@@ -476,7 +469,7 @@ export class Formatter {
    * @returns the estimated width in pixels
    */
   preCalculateMinTotalWidth(voices: Voice[]): number {
-    const unalignedPadding = Tables.currentMusicFont().lookupMetric('stave.unalignedNotePadding');
+    const unalignedPadding = Tables.lookupMetric('stave.unalignedNotePadding');
     // Calculate additional padding based on 3 methods:
     // 1) unaligned beats in voices, 2) variance of width, 3) variance of durations
     let unalignedCtxCount = 0;
@@ -688,6 +681,7 @@ export class Formatter {
       const maxTicks = context.getMaxTicks().value();
       totalTicks += maxTicks;
 
+      if (!context) console.log(1);
       const metrics = context.getMetrics();
       x = x + shift + metrics.totalLeftPx;
       context.setX(x);
@@ -752,6 +746,7 @@ export class Formatter {
 
                 // Calculate the limits of the shift based on modifiers, etc.
                 const thisTickable = voices[v];
+                if (!thisTickable) console.log(2);
                 const insideLeftEdge =
                   thisTickable.getX() -
                   (thisTickable.getMetrics().modLeftPx + thisTickable.getMetrics().leftDisplacedHeadPx);
@@ -823,15 +818,16 @@ export class Formatter {
       return lastContext.getX() - firstContext.getX();
     }
 
+    if (!lastContext) console.log(3);
+    if (!firstContext) console.log(4);
     const adjustedJustifyWidth =
       justifyWidth -
       lastContext.getMetrics().notePx -
       lastContext.getMetrics().totalRightPx -
       firstContext.getMetrics().totalLeftPx;
-    const musicFont = Tables.currentMusicFont();
-    const configMinPadding = musicFont.lookupMetric('stave.endPaddingMin');
-    const configMaxPadding = musicFont.lookupMetric('stave.endPaddingMax');
-    const leftPadding = musicFont.lookupMetric('stave.padding');
+    const configMinPadding = Tables.lookupMetric('stave.endPaddingMin');
+    const configMaxPadding = Tables.lookupMetric('stave.endPaddingMax');
+    const leftPadding = Tables.lookupMetric('stave.padding');
     let targetWidth = adjustedJustifyWidth;
     const distances = calculateIdealDistances(targetWidth);
     let actualWidth = shiftToIdealDistances(distances);

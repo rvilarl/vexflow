@@ -17,7 +17,6 @@ import { FontInfo } from './font';
 import { Formatter, FormatterOptions } from './formatter';
 import { FretHandFinger } from './frethandfinger';
 import { GhostNote } from './ghostnote';
-import { Glyph } from './glyph';
 import { GlyphNote, GlyphNoteOptions } from './glyphnote';
 import { GraceNote, GraceNoteStruct } from './gracenote';
 import { GraceNoteGroup } from './gracenotegroup';
@@ -227,7 +226,7 @@ export class Factory {
     return note;
   }
 
-  GlyphNote(glyph: Glyph, noteStruct: NoteStruct, options?: GlyphNoteOptions): GlyphNote {
+  GlyphNote(glyph: string, noteStruct: NoteStruct, options?: GlyphNoteOptions): GlyphNote {
     const note = new GlyphNote(glyph, noteStruct, options);
     if (this.stave) note.setStave(this.stave);
     note.setContext(this.context);
@@ -356,8 +355,6 @@ export class Factory {
   ChordSymbol(params?: {
     vJustify?: string;
     hJustify?: string;
-    kerning?: boolean;
-    reportWidth?: boolean;
     fontFamily?: string;
     fontSize?: number;
     fontWeight?: string;
@@ -365,16 +362,12 @@ export class Factory {
     const p = {
       vJustify: 'top',
       hJustify: 'center',
-      kerning: true,
-      reportWidth: true,
       ...params,
     };
 
     const chordSymbol = new ChordSymbol();
     chordSymbol.setHorizontal(p.hJustify);
     chordSymbol.setVertical(p.vJustify);
-    chordSymbol.setEnableKerning(p.kerning);
-    chordSymbol.setReportWidth(p.reportWidth);
     // There is a default font based on the engraving font.  Only set then
     // font if it is specific, else use the default
     if (typeof p.fontFamily === 'string' && typeof p.fontSize === 'number') {
@@ -402,12 +395,11 @@ export class Factory {
   ) {
     const options = {
       type,
-      position: 0,
       accidental: '',
       ...params,
     };
     const ornament = new Ornament(type);
-    ornament.setPosition(options.position);
+    if (options.position) ornament.setPosition(options.position);
     if (options.upperAccidental) {
       ornament.setUpperAccidental(options.upperAccidental);
     }

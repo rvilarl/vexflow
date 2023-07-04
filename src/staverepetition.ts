@@ -1,8 +1,6 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // @author: Larry Kuhns 2011
 
-import { Font } from './font';
-import { Glyph } from './glyph';
 import { Stave } from './stave';
 import { StaveModifier } from './stavemodifier';
 import { Tables } from './tables';
@@ -102,26 +100,18 @@ export class Repetition extends StaveModifier {
 
   drawCodaFixed(stave: Stave, x: number): this {
     const y = stave.getYForTopText(stave.getNumLines()) + this.yShift;
-    Glyph.renderGlyph(
-      stave.checkContext(),
-      this.x + x + this.xShift,
-      y + Tables.currentMusicFont().lookupMetric('staveRepetition.coda.offsetY'),
-      40,
-      'coda',
-      { category: 'coda' }
-    );
+    this.text = String.fromCodePoint(0xe048 /*coda*/);
+    this.renderText(stave.checkContext(), this.x + x + this.xShift, y + Tables.lookupMetric('Repetition.coda.offsetY'));
     return this;
   }
 
   drawSignoFixed(stave: Stave, x: number): this {
     const y = stave.getYForTopText(stave.getNumLines()) + this.yShift;
-    Glyph.renderGlyph(
+    this.text = String.fromCodePoint(0xe047 /*segno*/);
+    this.renderText(
       stave.checkContext(),
       this.x + x + this.xShift,
-      y + Tables.currentMusicFont().lookupMetric('staveRepetition.segno.offsetY'),
-      30,
-      'segno',
-      { category: 'segno' }
+      y + Tables.lookupMetric('Repetition.segno.offsetY')
     );
     return this;
   }
@@ -140,10 +130,7 @@ export class Repetition extends StaveModifier {
       case Repetition.type.CODA_LEFT:
         // Offset Coda text to right of stave beginning
         textX = this.x + stave.getVerticalBarWidth();
-        symbolX =
-          textX +
-          ctx.measureText(text).width +
-          Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.offsetX');
+        symbolX = textX + ctx.measureText(text).width + Tables.lookupMetric('Repetition.symbolText.offsetX');
         break;
       // To the right without symbol
       case Repetition.type.DC:
@@ -156,7 +143,7 @@ export class Repetition extends StaveModifier {
           x +
           this.xShift +
           stave.getWidth() -
-          Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.spacing') -
+          Tables.lookupMetric('Repetition.symbolText.spacing') -
           modifierWidth -
           ctx.measureText(text).width;
         break;
@@ -167,25 +154,18 @@ export class Repetition extends StaveModifier {
           x +
           this.xShift +
           stave.getWidth() -
-          Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.spacing') -
+          Tables.lookupMetric('Repetition.symbolText.spacing') -
           modifierWidth -
           ctx.measureText(text).width -
-          Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.offsetX');
-        symbolX =
-          textX +
-          ctx.measureText(text).width +
-          Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.offsetX');
+          Tables.lookupMetric('Repetition.symbolText.offsetX');
+        symbolX = textX + ctx.measureText(text).width + Tables.lookupMetric('Repetition.symbolText.offsetX');
         break;
     }
 
     const y =
-      stave.getYForTopText(stave.getNumLines()) +
-      this.yShift +
-      Tables.currentMusicFont().lookupMetric('staveRepetition.symbolText.offsetY');
+      stave.getYForTopText(stave.getNumLines()) + this.yShift + Tables.lookupMetric('Repetition.symbolText.offsetY');
     if (drawCoda) {
-      Glyph.renderGlyph(ctx, symbolX, y, Font.convertSizeToPointValue(this.textFont?.size) * 2, 'coda', {
-        category: 'coda',
-      });
+      ctx.fillText(String.fromCodePoint(0xe048 /*coda*/), symbolX, y);
     }
 
     ctx.fillText(text, textX, y + 5);

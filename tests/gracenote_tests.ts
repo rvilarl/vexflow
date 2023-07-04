@@ -3,7 +3,7 @@
 //
 // GraceNote Tests
 
-// TODO: In the 'stem' test (aka Grace Note Stem › SVG + Petaluma in flow.html), the Petaluma note heads are not scaled down properly.
+// TODO: In the 'E210' /*stem*/ test (aka Grace Note Stem › SVG + Petaluma in flow.html), the Petaluma note heads are not scaled down properly.
 
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 

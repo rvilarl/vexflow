@@ -166,10 +166,7 @@ export class StaveTie extends Element {
     centerX -= ctx.measureText(this.text).width / 2;
     const stave = this.notes.firstNote?.checkStave() ?? this.notes.lastNote?.checkStave();
     if (stave) {
-      ctx.save();
-      ctx.setFont(this.textFont);
-      ctx.fillText(this.text, centerX + this.renderOptions.textShiftX, stave.getYForTopText() - 1);
-      ctx.restore();
+      this.renderText(ctx, centerX + this.renderOptions.textShiftX, stave.getYForTopText() - 1);
     }
   }
 

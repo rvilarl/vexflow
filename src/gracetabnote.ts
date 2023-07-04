@@ -6,9 +6,9 @@
 // A basic implementation of grace notes
 // to be rendered on a tab stave.
 //
-// See `tests/gracetabnote_tests.ts` for usage examples.
+// See `tests/gracetabnoteTests.ts` for usage examples.
 
-import { Font } from './font';
+import { Tables } from './tables';
 import { TabNote, TabNoteStruct } from './tabnote';
 import { Category } from './typeguard';
 
@@ -27,7 +27,8 @@ export class GraceTabNote extends TabNote {
       // grace glyph scale
       scale: 0.6,
       // grace tablature font
-      font: `7.5pt ${Font.SANS_SERIF}`,
+      font: Tables.lookupMetric('fontFamily'),
+      glyphFontScale: Tables.lookupMetric('graceTabNote.fontSize'),
     };
 
     this.updateWidth();

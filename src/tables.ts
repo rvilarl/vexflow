@@ -1,109 +1,113 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 
 import { ArticulationStruct } from './articulation';
-import { Font, FontInfo } from './font';
+import { FontInfo } from './font';
 import { Fraction } from './fraction';
-import { Glyph, GlyphProps } from './glyph';
+import type { GlyphProps } from './note';
 import { KeyProps } from './note';
 import { RuntimeError } from './util';
 
 const RESOLUTION = 16384;
+
+function sc(...codes: number[]): string {
+  return String.fromCharCode(...codes);
+}
 
 export const CommonMetrics = {
   fontFamily: 'Bravura',
   fontSize: 30,
   fontWeight: 'normal',
   fontStyle: 'normal',
+  stave: {
+    padding: 12,
+    endPaddingMax: 10,
+    endPaddingMin: 5,
+    unalignedNotePadding: 10,
+  },
 
   Accidental: {
     cautionary: {
       fontSize: 28,
     },
+    rightPadding: 1,
+    leftPadding: 2,
+    spacing: 3,
   },
 
   Annotation: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 10,
   },
 
   Bend: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 10,
   },
 
   ChordSymbol: {
-    fontFamily: 'Roboto Slab, Times, serif',
     fontSize: 12,
+    superscriptOffset: -0.4,
+    subscriptOffset: 0.3,
+    spacing: 0.05,
+    superSubRatio: 0.66,
   },
 
   FretHandFinger: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 9,
     fontWeight: 'bold',
   },
 
   PedalMarking: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 12,
     fontWeight: 'bold',
     fontStyle: 'italic',
   },
 
   Repetition: {
-    fontFamily: 'Times New Roman, serif',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
+    symbolText: {
+      offsetX: 12,
+      offsetY: 25,
+      spacing: 5,
+    },
+    coda: {
+      offsetY: 25,
+    },
+    segno: {
+      offsetY: 10,
+    },
   },
 
   Stave: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 8,
   },
 
   StaveConnector: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 16,
   },
 
-  StaveLine: {
-    fontFamily: 'Arial, sans-serif',
-    fontSize: 10,
-  },
-
-  StaveSection: {
-    fontFamily: 'Arial, sans-serif',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-
   StaveTempo: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 14,
     fontWeight: 'bold',
   },
 
   StaveText: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 16,
   },
 
-  StaveTie: {
-    fontFamily: 'Arial, sans-serif',
+  StaveSection: {
     fontSize: 10,
+    fontWeight: 'bold',
   },
 
   StringNumber: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 10,
     fontWeight: 'bold',
   },
 
   Strokes: {
     text: {
-      fontFamily: 'Times New Roman, serif',
       fontSize: 10,
       fontStyle: 'italic',
-      fontWeight: 'bold',
     },
   },
 
@@ -112,32 +116,50 @@ export const CommonMetrics = {
   },
 
   TabSlide: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 10,
     fontStyle: 'italic',
-    fontWeight: 'bold',
-  },
-
-  TabTie: {
-    fontFamily: 'Arial, sans-serif',
-    fontSize: 10,
   },
 
   TextBracket: {
-    fontFamily: 'Times New Roman, serif',
     fontSize: 15,
     fontStyle: 'italic',
   },
 
   TextNote: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 12,
   },
 
   Volta: {
-    fontFamily: 'Arial, sans-serif',
     fontSize: 9,
     fontWeight: 'bold',
+  },
+
+  tremolo: {
+    default: {
+      spacing: 7,
+      offsetYStemUp: -8,
+      offsetYStemDown: 8,
+      offsetXStemUp: 11,
+      offsetXStemDown: 1,
+    },
+    grace: {
+      spacing: (7 * 3) / 5,
+      offsetYStemUp: -(8 * 3) / 5,
+      offsetYStemDown: (8 * 3) / 5,
+      offsetXStemUp: 7,
+      offsetXStemDown: 1,
+    },
+  },
+
+  noteHead: {
+    minPadding: 2,
+  },
+
+  stringNumber: {
+    verticalPadding: 8,
+    stemPadding: 2,
+    leftPadding: 5,
+    rightPadding: 6,
   },
 };
 
@@ -221,63 +243,53 @@ const notesInfo: Record<
   {
     index: number;
     intVal?: number;
-    accidental?: string;
-    rest?: boolean;
-    octave?: number;
-    code?: string;
-    shiftRight?: number;
+    acc?: number;
   }
 > = {
   C: { index: 0, intVal: 0 },
-  CN: { index: 0, intVal: 0, accidental: 'n' },
-  'C#': { index: 0, intVal: 1, accidental: '#' },
-  'C##': { index: 0, intVal: 2, accidental: '##' },
-  CB: { index: 0, intVal: 11, accidental: 'b' },
-  CBB: { index: 0, intVal: 10, accidental: 'bb' },
+  CN: { index: 0, intVal: 0, acc: 0xe261 /*accidentalNatural*/ },
+  'C#': { index: 0, intVal: 1, acc: 0xe262 /*accidentalSharp*/ },
+  'C##': { index: 0, intVal: 2, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  CB: { index: 0, intVal: 11, acc: 0xe260 /*accidentalFlat*/ },
+  CBB: { index: 0, intVal: 10, acc: 0xe264 /*accidentalDoubleFlat*/ },
   D: { index: 1, intVal: 2 },
-  DN: { index: 1, intVal: 2, accidental: 'n' },
-  'D#': { index: 1, intVal: 3, accidental: '#' },
-  'D##': { index: 1, intVal: 4, accidental: '##' },
-  DB: { index: 1, intVal: 1, accidental: 'b' },
-  DBB: { index: 1, intVal: 0, accidental: 'bb' },
+  DN: { index: 1, intVal: 2, acc: 0xe261 /*accidentalNatural*/ },
+  'D#': { index: 1, intVal: 3, acc: 0xe262 /*accidentalSharp*/ },
+  'D##': { index: 1, intVal: 4, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  DB: { index: 1, intVal: 1, acc: 0xe260 /*accidentalFlat*/ },
+  DBB: { index: 1, intVal: 0, acc: 0xe264 /*accidentalDoubleFlat*/ },
   E: { index: 2, intVal: 4 },
-  EN: { index: 2, intVal: 4, accidental: 'n' },
-  'E#': { index: 2, intVal: 5, accidental: '#' },
-  'E##': { index: 2, intVal: 6, accidental: '##' },
-  EB: { index: 2, intVal: 3, accidental: 'b' },
-  EBB: { index: 2, intVal: 2, accidental: 'bb' },
+  EN: { index: 2, intVal: 4, acc: 0xe261 /*accidentalNatural*/ },
+  'E#': { index: 2, intVal: 5, acc: 0xe262 /*accidentalSharp*/ },
+  'E##': { index: 2, intVal: 6, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  EB: { index: 2, intVal: 3, acc: 0xe260 /*accidentalFlat*/ },
+  EBB: { index: 2, intVal: 2, acc: 0xe264 /*accidentalDoubleFlat*/ },
   F: { index: 3, intVal: 5 },
-  FN: { index: 3, intVal: 5, accidental: 'n' },
-  'F#': { index: 3, intVal: 6, accidental: '#' },
-  'F##': { index: 3, intVal: 7, accidental: '##' },
-  FB: { index: 3, intVal: 4, accidental: 'b' },
-  FBB: { index: 3, intVal: 3, accidental: 'bb' },
+  FN: { index: 3, intVal: 5, acc: 0xe261 /*accidentalNatural*/ },
+  'F#': { index: 3, intVal: 6, acc: 0xe262 /*accidentalSharp*/ },
+  'F##': { index: 3, intVal: 7, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  FB: { index: 3, intVal: 4, acc: 0xe260 /*accidentalFlat*/ },
+  FBB: { index: 3, intVal: 3, acc: 0xe264 /*accidentalDoubleFlat*/ },
   G: { index: 4, intVal: 7 },
-  GN: { index: 4, intVal: 7, accidental: 'n' },
-  'G#': { index: 4, intVal: 8, accidental: '#' },
-  'G##': { index: 4, intVal: 9, accidental: '##' },
-  GB: { index: 4, intVal: 6, accidental: 'b' },
-  GBB: { index: 4, intVal: 5, accidental: 'bb' },
+  GN: { index: 4, intVal: 7, acc: 0xe261 /*accidentalNatural*/ },
+  'G#': { index: 4, intVal: 8, acc: 0xe262 /*accidentalSharp*/ },
+  'G##': { index: 4, intVal: 9, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  GB: { index: 4, intVal: 6, acc: 0xe260 /*accidentalFlat*/ },
+  GBB: { index: 4, intVal: 5, acc: 0xe264 /*accidentalDoubleFlat*/ },
   A: { index: 5, intVal: 9 },
-  AN: { index: 5, intVal: 9, accidental: 'n' },
-  'A#': { index: 5, intVal: 10, accidental: '#' },
-  'A##': { index: 5, intVal: 11, accidental: '##' },
-  AB: { index: 5, intVal: 8, accidental: 'b' },
-  ABB: { index: 5, intVal: 7, accidental: 'bb' },
+  AN: { index: 5, intVal: 9, acc: 0xe261 /*accidentalNatural*/ },
+  'A#': { index: 5, intVal: 10, acc: 0xe262 /*accidentalSharp*/ },
+  'A##': { index: 5, intVal: 11, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  AB: { index: 5, intVal: 8, acc: 0xe260 /*accidentalFlat*/ },
+  ABB: { index: 5, intVal: 7, acc: 0xe264 /*accidentalDoubleFlat*/ },
   B: { index: 6, intVal: 11 },
-  BN: { index: 6, intVal: 11, accidental: 'n' },
-  'B#': { index: 6, intVal: 12, accidental: '#' },
-  'B##': { index: 6, intVal: 13, accidental: '##' },
-  BB: { index: 6, intVal: 10, accidental: 'b' },
-  BBB: { index: 6, intVal: 9, accidental: 'bb' },
-  R: { index: 6, rest: true }, // Rest
-  X: {
-    index: 6,
-    accidental: '',
-    octave: 4,
-    code: 'noteheadXBlack',
-    shiftRight: 5.5,
-  },
+  BN: { index: 6, intVal: 11, acc: 0xe261 /*accidentalNatural*/ },
+  'B#': { index: 6, intVal: 12, acc: 0xe262 /*accidentalSharp*/ },
+  'B##': { index: 6, intVal: 13, acc: 0xe263 /*accidentalDoubleSharp*/ },
+  BB: { index: 6, intVal: 10, acc: 0xe260 /*accidentalFlat*/ },
+  BBB: { index: 6, intVal: 9, acc: 0xe264 /*accidentalDoubleFlat*/ },
+  R: { index: 6 }, // Rest
+  X: { index: 6 },
 };
 
 const validNoteTypes: Record<string, { name: string }> = {
@@ -298,270 +310,27 @@ const validNoteTypes: Record<string, { name: string }> = {
   td: { name: 'triangle down' },
 };
 
-const accidentals: Record<string, { code: string; parenRightPaddingAdjustment: number }> = {
-  '#': { code: 'accidentalSharp', parenRightPaddingAdjustment: -1 },
-  '##': { code: 'accidentalDoubleSharp', parenRightPaddingAdjustment: -1 },
-  b: { code: 'accidentalFlat', parenRightPaddingAdjustment: -2 },
-  bb: { code: 'accidentalDoubleFlat', parenRightPaddingAdjustment: -2 },
-  n: { code: 'accidentalNatural', parenRightPaddingAdjustment: -1 },
-  '{': { code: 'accidentalParensLeft', parenRightPaddingAdjustment: -1 },
-  '}': { code: 'accidentalParensRight', parenRightPaddingAdjustment: -1 },
-  db: { code: 'accidentalThreeQuarterTonesFlatZimmermann', parenRightPaddingAdjustment: -1 },
-  d: { code: 'accidentalQuarterToneFlatStein', parenRightPaddingAdjustment: 0 },
-  '++': { code: 'accidentalThreeQuarterTonesSharpStein', parenRightPaddingAdjustment: -1 },
-  '+': { code: 'accidentalQuarterToneSharpStein', parenRightPaddingAdjustment: -1 },
-  '+-': { code: 'accidentalKucukMucennebSharp', parenRightPaddingAdjustment: -1 },
-  bs: { code: 'accidentalBakiyeFlat', parenRightPaddingAdjustment: -1 },
-  bss: { code: 'accidentalBuyukMucennebFlat', parenRightPaddingAdjustment: -1 },
-  o: { code: 'accidentalSori', parenRightPaddingAdjustment: -1 },
-  k: { code: 'accidentalKoron', parenRightPaddingAdjustment: -1 },
-  bbs: { code: 'vexAccidentalMicrotonal1', parenRightPaddingAdjustment: -1 },
-  '++-': { code: 'accidentalBuyukMucennebSharp', parenRightPaddingAdjustment: -1 },
-  ashs: { code: 'vexAccidentalMicrotonal3', parenRightPaddingAdjustment: -1 },
-  afhf: { code: 'vexAccidentalMicrotonal4', parenRightPaddingAdjustment: -1 },
-  accSagittal5v7KleismaUp: { code: 'accSagittal5v7KleismaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v7KleismaDown: { code: 'accSagittal5v7KleismaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5CommaUp: { code: 'accSagittal5CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5CommaDown: { code: 'accSagittal5CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal7CommaUp: { code: 'accSagittal7CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal7CommaDown: { code: 'accSagittal7CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal25SmallDiesisUp: { code: 'accSagittal25SmallDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal25SmallDiesisDown: { code: 'accSagittal25SmallDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal35MediumDiesisUp: { code: 'accSagittal35MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal35MediumDiesisDown: { code: 'accSagittal35MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal11MediumDiesisUp: { code: 'accSagittal11MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal11MediumDiesisDown: { code: 'accSagittal11MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal11LargeDiesisUp: { code: 'accSagittal11LargeDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal11LargeDiesisDown: { code: 'accSagittal11LargeDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal35LargeDiesisUp: { code: 'accSagittal35LargeDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal35LargeDiesisDown: { code: 'accSagittal35LargeDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp25SDown: { code: 'accSagittalSharp25SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat25SUp: { code: 'accSagittalFlat25SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7CDown: { code: 'accSagittalSharp7CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7CUp: { code: 'accSagittalFlat7CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5CDown: { code: 'accSagittalSharp5CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5CUp: { code: 'accSagittalFlat5CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v7kDown: { code: 'accSagittalSharp5v7kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v7kUp: { code: 'accSagittalFlat5v7kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp: { code: 'accSagittalSharp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat: { code: 'accSagittalFlat', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v7kUp: { code: 'accSagittalSharp5v7kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v7kDown: { code: 'accSagittalFlat5v7kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5CUp: { code: 'accSagittalSharp5CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5CDown: { code: 'accSagittalFlat5CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7CUp: { code: 'accSagittalSharp7CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7CDown: { code: 'accSagittalFlat7CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp25SUp: { code: 'accSagittalSharp25SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat25SDown: { code: 'accSagittalFlat25SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp35MUp: { code: 'accSagittalSharp35MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat35MDown: { code: 'accSagittalFlat35MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11MUp: { code: 'accSagittalSharp11MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11MDown: { code: 'accSagittalFlat11MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11LUp: { code: 'accSagittalSharp11LUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11LDown: { code: 'accSagittalFlat11LDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp35LUp: { code: 'accSagittalSharp35LUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat35LDown: { code: 'accSagittalFlat35LDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp25SDown: { code: 'accSagittalDoubleSharp25SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat25SUp: { code: 'accSagittalDoubleFlat25SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp7CDown: { code: 'accSagittalDoubleSharp7CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat7CUp: { code: 'accSagittalDoubleFlat7CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp5CDown: { code: 'accSagittalDoubleSharp5CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat5CUp: { code: 'accSagittalDoubleFlat5CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp5v7kDown: { code: 'accSagittalDoubleSharp5v7kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat5v7kUp: { code: 'accSagittalDoubleFlat5v7kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp: { code: 'accSagittalDoubleSharp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat: { code: 'accSagittalDoubleFlat', parenRightPaddingAdjustment: -1 },
-  accSagittal7v11KleismaUp: { code: 'accSagittal7v11KleismaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal7v11KleismaDown: { code: 'accSagittal7v11KleismaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal17CommaUp: { code: 'accSagittal17CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal17CommaDown: { code: 'accSagittal17CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal55CommaUp: { code: 'accSagittal55CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal55CommaDown: { code: 'accSagittal55CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal7v11CommaUp: { code: 'accSagittal7v11CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal7v11CommaDown: { code: 'accSagittal7v11CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v11SmallDiesisUp: { code: 'accSagittal5v11SmallDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v11SmallDiesisDown: { code: 'accSagittal5v11SmallDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v11SDown: { code: 'accSagittalSharp5v11SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v11SUp: { code: 'accSagittalFlat5v11SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v11CDown: { code: 'accSagittalSharp7v11CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v11CUp: { code: 'accSagittalFlat7v11CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp55CDown: { code: 'accSagittalSharp55CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat55CUp: { code: 'accSagittalFlat55CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp17CDown: { code: 'accSagittalSharp17CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat17CUp: { code: 'accSagittalFlat17CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v11kDown: { code: 'accSagittalSharp7v11kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v11kUp: { code: 'accSagittalFlat7v11kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v11kUp: { code: 'accSagittalSharp7v11kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v11kDown: { code: 'accSagittalFlat7v11kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp17CUp: { code: 'accSagittalSharp17CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat17CDown: { code: 'accSagittalFlat17CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp55CUp: { code: 'accSagittalSharp55CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat55CDown: { code: 'accSagittalFlat55CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v11CUp: { code: 'accSagittalSharp7v11CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v11CDown: { code: 'accSagittalFlat7v11CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v11SUp: { code: 'accSagittalSharp5v11SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v11SDown: { code: 'accSagittalFlat5v11SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp5v11SDown: { code: 'accSagittalDoubleSharp5v11SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat5v11SUp: { code: 'accSagittalDoubleFlat5v11SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp7v11CDown: { code: 'accSagittalDoubleSharp7v11CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat7v11CUp: { code: 'accSagittalDoubleFlat7v11CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp55CDown: { code: 'accSagittalDoubleSharp55CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat55CUp: { code: 'accSagittalDoubleFlat55CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp17CDown: { code: 'accSagittalDoubleSharp17CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat17CUp: { code: 'accSagittalDoubleFlat17CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp7v11kDown: { code: 'accSagittalDoubleSharp7v11kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat7v11kUp: { code: 'accSagittalDoubleFlat7v11kUp', parenRightPaddingAdjustment: -1 },
-  accSagittal23CommaUp: { code: 'accSagittal23CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal23CommaDown: { code: 'accSagittal23CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v19CommaUp: { code: 'accSagittal5v19CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v19CommaDown: { code: 'accSagittal5v19CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v23SmallDiesisUp: { code: 'accSagittal5v23SmallDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v23SmallDiesisDown: { code: 'accSagittal5v23SmallDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v23SDown: { code: 'accSagittalSharp5v23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v23SUp: { code: 'accSagittalFlat5v23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v19CDown: { code: 'accSagittalSharp5v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v19CUp: { code: 'accSagittalFlat5v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp23CDown: { code: 'accSagittalSharp23CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat23CUp: { code: 'accSagittalFlat23CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp23CUp: { code: 'accSagittalSharp23CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat23CDown: { code: 'accSagittalFlat23CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v19CUp: { code: 'accSagittalSharp5v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v19CDown: { code: 'accSagittalFlat5v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v23SUp: { code: 'accSagittalSharp5v23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v23SDown: { code: 'accSagittalFlat5v23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp5v23SDown: { code: 'accSagittalDoubleSharp5v23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat5v23SUp: { code: 'accSagittalDoubleFlat5v23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp5v19CDown: { code: 'accSagittalDoubleSharp5v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat5v19CUp: { code: 'accSagittalDoubleFlat5v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp23CDown: { code: 'accSagittalDoubleSharp23CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat23CUp: { code: 'accSagittalDoubleFlat23CUp', parenRightPaddingAdjustment: -1 },
-  accSagittal19SchismaUp: { code: 'accSagittal19SchismaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal19SchismaDown: { code: 'accSagittal19SchismaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal17KleismaUp: { code: 'accSagittal17KleismaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal17KleismaDown: { code: 'accSagittal17KleismaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal143CommaUp: { code: 'accSagittal143CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal143CommaDown: { code: 'accSagittal143CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal11v49CommaUp: { code: 'accSagittal11v49CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal11v49CommaDown: { code: 'accSagittal11v49CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal19CommaUp: { code: 'accSagittal19CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal19CommaDown: { code: 'accSagittal19CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal7v19CommaUp: { code: 'accSagittal7v19CommaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal7v19CommaDown: { code: 'accSagittal7v19CommaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal49SmallDiesisUp: { code: 'accSagittal49SmallDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal49SmallDiesisDown: { code: 'accSagittal49SmallDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal23SmallDiesisUp: { code: 'accSagittal23SmallDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal23SmallDiesisDown: { code: 'accSagittal23SmallDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v13MediumDiesisUp: { code: 'accSagittal5v13MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v13MediumDiesisDown: { code: 'accSagittal5v13MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal11v19MediumDiesisUp: { code: 'accSagittal11v19MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal11v19MediumDiesisDown: { code: 'accSagittal11v19MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal49MediumDiesisUp: { code: 'accSagittal49MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal49MediumDiesisDown: { code: 'accSagittal49MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v49MediumDiesisUp: { code: 'accSagittal5v49MediumDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v49MediumDiesisDown: { code: 'accSagittal5v49MediumDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal49LargeDiesisUp: { code: 'accSagittal49LargeDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal49LargeDiesisDown: { code: 'accSagittal49LargeDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal11v19LargeDiesisUp: { code: 'accSagittal11v19LargeDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal11v19LargeDiesisDown: { code: 'accSagittal11v19LargeDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5v13LargeDiesisUp: { code: 'accSagittal5v13LargeDiesisUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5v13LargeDiesisDown: { code: 'accSagittal5v13LargeDiesisDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp23SDown: { code: 'accSagittalSharp23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat23SUp: { code: 'accSagittalFlat23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp49SDown: { code: 'accSagittalSharp49SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat49SUp: { code: 'accSagittalFlat49SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v19CDown: { code: 'accSagittalSharp7v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v19CUp: { code: 'accSagittalFlat7v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp19CDown: { code: 'accSagittalSharp19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat19CUp: { code: 'accSagittalFlat19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11v49CDown: { code: 'accSagittalSharp11v49CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11v49CUp: { code: 'accSagittalFlat11v49CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp143CDown: { code: 'accSagittalSharp143CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat143CUp: { code: 'accSagittalFlat143CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp17kDown: { code: 'accSagittalSharp17kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat17kUp: { code: 'accSagittalFlat17kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp19sDown: { code: 'accSagittalSharp19sDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat19sUp: { code: 'accSagittalFlat19sUp', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp19sUp: { code: 'accSagittalSharp19sUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat19sDown: { code: 'accSagittalFlat19sDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp17kUp: { code: 'accSagittalSharp17kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat17kDown: { code: 'accSagittalFlat17kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp143CUp: { code: 'accSagittalSharp143CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat143CDown: { code: 'accSagittalFlat143CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11v49CUp: { code: 'accSagittalSharp11v49CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11v49CDown: { code: 'accSagittalFlat11v49CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp19CUp: { code: 'accSagittalSharp19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat19CDown: { code: 'accSagittalFlat19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp7v19CUp: { code: 'accSagittalSharp7v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat7v19CDown: { code: 'accSagittalFlat7v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp49SUp: { code: 'accSagittalSharp49SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat49SDown: { code: 'accSagittalFlat49SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp23SUp: { code: 'accSagittalSharp23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat23SDown: { code: 'accSagittalFlat23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v13MUp: { code: 'accSagittalSharp5v13MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v13MDown: { code: 'accSagittalFlat5v13MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11v19MUp: { code: 'accSagittalSharp11v19MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11v19MDown: { code: 'accSagittalFlat11v19MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp49MUp: { code: 'accSagittalSharp49MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat49MDown: { code: 'accSagittalFlat49MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v49MUp: { code: 'accSagittalSharp5v49MUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v49MDown: { code: 'accSagittalFlat5v49MDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp49LUp: { code: 'accSagittalSharp49LUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat49LDown: { code: 'accSagittalFlat49LDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp11v19LUp: { code: 'accSagittalSharp11v19LUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat11v19LDown: { code: 'accSagittalFlat11v19LDown', parenRightPaddingAdjustment: -1 },
-  accSagittalSharp5v13LUp: { code: 'accSagittalSharp5v13LUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFlat5v13LDown: { code: 'accSagittalFlat5v13LDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp23SDown: { code: 'accSagittalDoubleSharp23SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat23SUp: { code: 'accSagittalDoubleFlat23SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp49SDown: { code: 'accSagittalDoubleSharp49SDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat49SUp: { code: 'accSagittalDoubleFlat49SUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp7v19CDown: { code: 'accSagittalDoubleSharp7v19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat7v19CUp: { code: 'accSagittalDoubleFlat7v19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp19CDown: { code: 'accSagittalDoubleSharp19CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat19CUp: { code: 'accSagittalDoubleFlat19CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp11v49CDown: { code: 'accSagittalDoubleSharp11v49CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat11v49CUp: { code: 'accSagittalDoubleFlat11v49CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp143CDown: { code: 'accSagittalDoubleSharp143CDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat143CUp: { code: 'accSagittalDoubleFlat143CUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp17kDown: { code: 'accSagittalDoubleSharp17kDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat17kUp: { code: 'accSagittalDoubleFlat17kUp', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleSharp19sDown: { code: 'accSagittalDoubleSharp19sDown', parenRightPaddingAdjustment: -1 },
-  accSagittalDoubleFlat19sUp: { code: 'accSagittalDoubleFlat19sUp', parenRightPaddingAdjustment: -1 },
-  accSagittalShaftUp: { code: 'accSagittalShaftUp', parenRightPaddingAdjustment: -1 },
-  accSagittalShaftDown: { code: 'accSagittalShaftDown', parenRightPaddingAdjustment: -1 },
-  accSagittalAcute: { code: 'accSagittalAcute', parenRightPaddingAdjustment: -1 },
-  accSagittalGrave: { code: 'accSagittalGrave', parenRightPaddingAdjustment: -1 },
-  accSagittal1MinaUp: { code: 'accSagittal1MinaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal1MinaDown: { code: 'accSagittal1MinaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal2MinasUp: { code: 'accSagittal2MinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal2MinasDown: { code: 'accSagittal2MinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal1TinaUp: { code: 'accSagittal1TinaUp', parenRightPaddingAdjustment: -1 },
-  accSagittal1TinaDown: { code: 'accSagittal1TinaDown', parenRightPaddingAdjustment: -1 },
-  accSagittal2TinasUp: { code: 'accSagittal2TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal2TinasDown: { code: 'accSagittal2TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal3TinasUp: { code: 'accSagittal3TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal3TinasDown: { code: 'accSagittal3TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal4TinasUp: { code: 'accSagittal4TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal4TinasDown: { code: 'accSagittal4TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal5TinasUp: { code: 'accSagittal5TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal5TinasDown: { code: 'accSagittal5TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal6TinasUp: { code: 'accSagittal6TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal6TinasDown: { code: 'accSagittal6TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal7TinasUp: { code: 'accSagittal7TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal7TinasDown: { code: 'accSagittal7TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal8TinasUp: { code: 'accSagittal8TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal8TinasDown: { code: 'accSagittal8TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittal9TinasUp: { code: 'accSagittal9TinasUp', parenRightPaddingAdjustment: -1 },
-  accSagittal9TinasDown: { code: 'accSagittal9TinasDown', parenRightPaddingAdjustment: -1 },
-  accSagittalFractionalTinaUp: { code: 'accSagittalFractionalTinaUp', parenRightPaddingAdjustment: -1 },
-  accSagittalFractionalTinaDown: { code: 'accSagittalFractionalTinaDown', parenRightPaddingAdjustment: -1 },
-  accidentalNarrowReversedFlat: { code: 'accidentalNarrowReversedFlat', parenRightPaddingAdjustment: -1 },
-  accidentalNarrowReversedFlatAndFlat: {
-    code: 'accidentalNarrowReversedFlatAndFlat',
-    parenRightPaddingAdjustment: -1,
-  },
-  accidentalWilsonPlus: { code: 'accidentalWilsonPlus', parenRightPaddingAdjustment: -1 },
-  accidentalWilsonMinus: { code: 'accidentalWilsonMinus', parenRightPaddingAdjustment: -1 },
+const accidentals: Record<string, number> = {
+  '#': 0xe262 /*accidentalSharp*/,
+  '##': 0xe263 /*accidentalDoubleSharp*/,
+  b: 0xe260 /*accidentalFlat*/,
+  bb: 0xe264 /*accidentalDoubleFlat*/,
+  n: 0xe261 /*accidentalNatural*/,
+  '{': 0xe26a /*accidentalParensLeft*/,
+  '}': 0xe26b /*accidentalParensRight*/,
+  db: 0xe281 /*accidentalThreeQuarterTonesFlatZimmermann*/,
+  d: 0xe280 /*accidentalQuarterToneFlatStein*/,
+  '++': 0xe283 /*accidentalThreeQuarterTonesSharpStein*/,
+  '+': 0xe282 /*accidentalQuarterToneSharpStein*/,
+  '+-': 0xe446 /*accidentalKucukMucennebSharp*/,
+  bs: 0xe442 /*accidentalBakiyeFlat*/,
+  bss: 0xe440 /*accidentalBuyukMucennebFlat*/,
+  o: 0xe461 /*accidentalSori*/,
+  k: 0xe460 /*accidentalKoron*/,
+  bbs: 0xe447 /*accidentalBuyukMucennebSharp*/,
+  '++-': 0xe447 /*accidentalBuyukMucennebSharp*/,
+  ashs: 0xe447 /*accidentalBuyukMucennebSharp*/,
+  afhf: 0xe447 /*accidentalBuyukMucennebSharp*/,
 };
 
 // Helps determine the layout of accidentals.
@@ -598,76 +367,80 @@ const accidentalColumns: Record<number, { [name: string]: number[] }> = {
 };
 
 const articulations: Record<string, ArticulationStruct> = {
-  'a.': { code: 'augmentationDot', betweenLines: true }, // Staccato
+  'a.': { code: 0xe1e7 /*augmentationDot*/, betweenLines: true }, // Staccato
   av: {
-    aboveCode: 'articStaccatissimoAbove',
-    belowCode: 'articStaccatissimoBelow',
+    aboveCode: 0xe4a6 /*articStaccatissimoAbove*/,
+    belowCode: 0xe4a7 /*articStaccatissimoBelow*/,
     betweenLines: true,
   }, // Staccatissimo
   'a>': {
-    aboveCode: 'articAccentAbove',
-    belowCode: 'articAccentBelow',
+    aboveCode: 0xe4a0 /*articAccentAbove*/,
+    belowCode: 0xe4a1 /*articAccentBelow*/,
     betweenLines: true,
   }, // Accent
   'a-': {
-    aboveCode: 'articTenutoAbove',
-    belowCode: 'articTenutoBelow',
+    aboveCode: 0xe4a4 /*articTenutoAbove*/,
+    belowCode: 0xe4a5 /*articTenutoBelow*/,
     betweenLines: true,
   }, // Tenuto
   'a^': {
-    aboveCode: 'articMarcatoAbove',
-    belowCode: 'articMarcatoBelow',
+    aboveCode: 0xe4ac /*articMarcatoAbove*/,
+    belowCode: 0xe4ad /*articMarcatoBelow*/,
     betweenLines: false,
   }, // Marcato
-  'a+': { code: 'pluckedLeftHandPizzicato', betweenLines: false }, // Left hand pizzicato
+  'a+': { code: 0xe633 /*pluckedLeftHandPizzicato*/, betweenLines: false }, // Left hand pizzicato
   ao: {
-    aboveCode: 'pluckedSnapPizzicatoAbove',
-    belowCode: 'pluckedSnapPizzicatoBelow',
+    aboveCode: 0xe631 /*pluckedSnapPizzicatoAbove*/,
+    belowCode: 0xe630 /*pluckedSnapPizzicatoBelow*/,
     betweenLines: false,
   }, // Snap pizzicato
-  ah: { code: 'stringsHarmonic', betweenLines: false }, // Natural harmonic or open note
-  'a@': { aboveCode: 'fermataAbove', belowCode: 'fermataBelow', betweenLines: false }, // Fermata
-  'a@a': { code: 'fermataAbove', betweenLines: false }, // Fermata above staff
-  'a@u': { code: 'fermataBelow', betweenLines: false }, // Fermata below staff
-  'a@s': { aboveCode: 'fermataShortAbove', belowCode: 'fermataShortBelow', betweenLines: false }, // Fermata short
-  'a@as': { code: 'fermataShortAbove', betweenLines: false }, // Fermata short above staff
-  'a@us': { code: 'fermataShortBelow', betweenLines: false }, // Fermata short below staff
-  'a@l': { aboveCode: 'fermataLongAbove', belowCode: 'fermataLongBelow', betweenLines: false }, // Fermata long
-  'a@al': { code: 'fermataLongAbove', betweenLines: false }, // Fermata long above staff
-  'a@ul': { code: 'fermataLongBelow', betweenLines: false }, // Fermata long below staff
-  'a@vl': { aboveCode: 'fermataVeryLongAbove', belowCode: 'fermataVeryLongBelow', betweenLines: false }, // Fermata very long
-  'a@avl': { code: 'fermataVeryLongAbove', betweenLines: false }, // Fermata very long above staff
-  'a@uvl': { code: 'fermataVeryLongBelow', betweenLines: false }, // Fermata very long below staff
-  'a|': { code: 'stringsUpBow', betweenLines: false }, // Bow up - up stroke
-  am: { code: 'stringsDownBow', betweenLines: false }, // Bow down - down stroke
-  'a,': { code: 'pictChokeCymbal', betweenLines: false }, // Choked
+  ah: { code: 0xe614 /*stringsHarmonic*/, betweenLines: false }, // Natural harmonic or open note
+  'a@': { aboveCode: 0xe4c0 /*fermataAbove*/, belowCode: 0xe4c1 /*fermataBelow*/, betweenLines: false }, // Fermata
+  'a@a': { code: 0xe4c0 /*fermataAbove*/, betweenLines: false }, // Fermata above staff
+  'a@u': { code: 0xe4c1 /*fermataBelow*/, betweenLines: false }, // Fermata below staff
+  'a@s': { aboveCode: 0xe4c4 /*fermataShortAbove*/, belowCode: 0xe4c5 /*fermataShortBelow*/, betweenLines: false }, // Fermata short
+  'a@as': { code: 0xe4c4 /*fermataShortAbove*/, betweenLines: false }, // Fermata short above staff
+  'a@us': { code: 0xe4c5 /*fermataShortBelow*/, betweenLines: false }, // Fermata short below staff
+  'a@l': { aboveCode: 0xe4c6 /*fermataLongAbove*/, belowCode: 0xe4c7 /*fermataLongBelow*/, betweenLines: false }, // Fermata long
+  'a@al': { code: 0xe4c6 /*fermataLongAbove*/, betweenLines: false }, // Fermata long above staff
+  'a@ul': { code: 0xe4c7 /*fermataLongBelow*/, betweenLines: false }, // Fermata long below staff
+  'a@vl': {
+    aboveCode: 0xe4c8 /*fermataVeryLongAbove*/,
+    belowCode: 0xe4c9 /*fermataVeryLongBelow*/,
+    betweenLines: false,
+  }, // Fermata very long
+  'a@avl': { code: 0xe4c8 /*fermataVeryLongAbove*/, betweenLines: false }, // Fermata very long above staff
+  'a@uvl': { code: 0xe4c9 /*fermataVeryLongBelow*/, betweenLines: false }, // Fermata very long below staff
+  'a|': { code: 0xe612 /*stringsUpBow*/, betweenLines: false }, // Bow up - up stroke
+  am: { code: 0xe610 /*stringsDownBow*/, betweenLines: false }, // Bow down - down stroke
+  'a,': { code: 0xe805 /*pictChokeCymbal*/, betweenLines: false }, // Choked
 };
 
-const ornaments: Record<string, { code: string }> = {
-  mordent: { code: 'ornamentShortTrill' },
-  mordentInverted: { code: 'ornamentMordent' },
-  turn: { code: 'ornamentTurn' },
-  turnInverted: { code: 'ornamentTurnSlash' },
-  tr: { code: 'ornamentTrill' },
-  upprall: { code: 'ornamentPrecompSlideTrillDAnglebert' },
-  downprall: { code: 'ornamentPrecompDoubleCadenceUpperPrefix' },
-  prallup: { code: 'ornamentPrecompTrillSuffixDandrieu' },
-  pralldown: { code: 'ornamentPrecompTrillLowerSuffix' },
-  upmordent: { code: 'ornamentPrecompSlideTrillBach' },
-  downmordent: { code: 'ornamentPrecompDoubleCadenceUpperPrefixTurn' },
-  lineprall: { code: 'ornamentPrecompAppoggTrill' },
-  prallprall: { code: 'ornamentTremblement' },
-  scoop: { code: 'brassScoop' },
-  doit: { code: 'brassDoitMedium' },
-  fall: { code: 'brassFallLipShort' },
-  doitLong: { code: 'brassLiftMedium' },
-  fallLong: { code: 'brassFallRoughMedium' },
-  bend: { code: 'brassBend' },
-  plungerClosed: { code: 'brassMuteClosed' },
-  plungerOpen: { code: 'brassMuteOpen' },
-  flip: { code: 'brassFlip' },
-  jazzTurn: { code: 'brassJazzTurn' },
-  smear: { code: 'brassSmear' },
+const ornaments: Record<string, number> = {
+  mordent: 0xe56c /*ornamentShortTrill*/,
+  mordentInverted: 0xe56d /*ornamentMordent*/,
+  turn: 0xe567 /*ornamentTurn*/,
+  turnInverted: 0xe569 /*ornamentTurnSlash*/,
+  tr: 0xe566 /*ornamentTrill*/,
+  upprall: 0xe5b5 /*ornamentPrecompSlideTrillDAnglebert*/,
+  downprall: 0xe5c3 /*ornamentPrecompDoubleCadenceUpperPrefix*/,
+  prallup: 0xe5bb /*ornamentPrecompTrillSuffixDandrieu*/,
+  pralldown: 0xe5c8 /*ornamentPrecompTrillLowerSuffix*/,
+  upmordent: 0xe5b8 /*ornamentPrecompSlideTrillBach*/,
+  downmordent: 0xe5c4 /*ornamentPrecompDoubleCadenceUpperPrefixTurn*/,
+  lineprall: 0xe5b2 /*ornamentPrecompAppoggTrill*/,
+  prallprall: 0xe56e /*ornamentTremblement*/,
+  scoop: 0xe5d0 /*brassScoop*/,
+  doit: 0xe5d5 /*brassDoitMedium*/,
+  fall: 0xe5d7 /*brassFallLipShort*/,
+  doitLong: 0xe5d2 /*brassLiftMedium*/,
+  fallLong: 0xe5de /*brassFallRoughMedium*/,
+  bend: 0xe5e3 /*brassBend*/,
+  plungerClosed: 0xe5e5 /*brassMuteClosed*/,
+  plungerOpen: 0xe5e7 /*brassMuteOpen*/,
+  flip: 0xe5e1 /*brassFlip*/,
+  jazzTurn: 0xe5e4 /*brassJazzTurn*/,
+  smear: 0xe5e2 /*brassSmear*/,
 };
 
 export class Tables {
@@ -679,29 +452,68 @@ export class Tables {
   static RENDER_PRECISION_PLACES = 3;
   static RESOLUTION = RESOLUTION;
 
+  // 1/2, 1, 2, 4, 8, 16, 32, 64, 128
+  // NOTE: There is no 256 here! However, there are other mentions of 256 in this file.
+  // For example, in durations has a 256 key, and sanitizeDuration() can return 256.
+  // The sanitizeDuration() bit may need to be removed by 0xfe.
+  static durationCodes: Record<string, Partial<GlyphProps>> = {
+    '1/2': {
+      stem: false,
+    },
+
+    1: {
+      stem: false,
+    },
+
+    2: {
+      stem: true,
+    },
+
+    4: {
+      stem: true,
+    },
+
+    8: {
+      stem: true,
+      beamCount: 1,
+      stemBeamExtension: 0,
+      codeFlagUp: 0xe240 /*flag8thUp*/,
+    },
+
+    16: {
+      beamCount: 2,
+      stemBeamExtension: 0,
+      stem: true,
+      codeFlagUp: 0xe242 /*flag16thUp*/,
+    },
+
+    32: {
+      beamCount: 3,
+      stemBeamExtension: 7.5,
+      stem: true,
+      codeFlagUp: 0xe244 /*flag32ndUp*/,
+    },
+
+    64: {
+      beamCount: 4,
+      stemBeamExtension: 15,
+      stem: true,
+      codeFlagUp: 0xe246 /*flag64thUp*/,
+    },
+
+    128: {
+      beamCount: 5,
+      stemBeamExtension: 22.5,
+      stem: true,
+      codeFlagUp: 0xe248 /*flag128thUp*/,
+    },
+  };
+
   /**
    * Customize this by calling Flow.setMusicFont(...fontNames);
    */
-  static MUSIC_FONT_STACK: Font[] = [];
+  static TEXT_FONT_SCALE = 10;
 
-  /**
-   * @returns the `Font` object at the head of the music font stack.
-   */
-  static currentMusicFont(): Font {
-    if (Tables.MUSIC_FONT_STACK.length === 0) {
-      throw new RuntimeError(
-        'NoFonts',
-        'The font stack is empty. See: await Flow.fetchMusicFont(...); Flow.setMusicFont(...).'
-      );
-    } else {
-      return Tables.MUSIC_FONT_STACK[0];
-    }
-  }
-
-  static NOTATION_FONT_SCALE = 39;
-  static TABLATURE_FONT_SCALE = 39;
-
-  static SLASH_NOTEHEAD_WIDTH = 15;
   static STAVE_LINE_DISTANCE = 10;
 
   // HACK:
@@ -774,7 +586,12 @@ export class Tables {
    * @param params a struct with one option, `octaveShift` for clef ottavation (0 = default; 1 = 8va; -1 = 8vb, etc.).
    * @returns properties for the specified note.
    */
-  static keyProperties(keyOctaveGlyph: string, clef: string = 'treble', params?: { octaveShift?: number }): KeyProps {
+  static keyProperties(
+    keyOctaveGlyph: string,
+    clef: string = 'treble',
+    type: string = 'N',
+    params?: { octaveShift?: number }
+  ): KeyProps {
     let options = { octaveShift: 0, duration: '4' };
     if (typeof params === 'object') {
       options = { ...options, ...params };
@@ -790,10 +607,9 @@ export class Tables {
     }
 
     const key = pieces[0].toUpperCase();
+    type = type.toUpperCase();
     const value = notesInfo[key];
     if (!value) throw new RuntimeError('BadArguments', 'Invalid key name: ' + key);
-    if (value.octave) pieces[1] = value.octave.toString();
-
     let octave = parseInt(pieces[1], 10);
 
     // .octaveShift is the shift to compensate for clef 8va/8vb.
@@ -803,34 +619,27 @@ export class Tables {
     let line = (baseIndex + value.index) / 2;
     line += Tables.clefProperties(clef).lineShift;
 
-    let stroke = 0;
-
-    if (line <= 0 && (line * 2) % 2 === 0) stroke = 1; // stroke up
-    if (line >= 6 && (line * 2) % 2 === 0) stroke = -1; // stroke down
-
     // Integer value for note arithmetic.
     const intValue = typeof value.intVal !== 'undefined' ? octave * 12 + value.intVal : undefined;
 
     // If the user specified a glyph, overwrite the glyph code.
-    const code = value.code;
-    const shiftRight = value.shiftRight;
-    let customNoteHeadProps = {};
+    let code = 0;
+    let glyphName = 'N';
     if (pieces.length > 2 && pieces[2]) {
-      const glyphName = pieces[2].toUpperCase();
-      customNoteHeadProps = { code: this.codeNoteHead(glyphName, duration) } || {};
-    }
+      glyphName = pieces[2].toUpperCase();
+    } else if (type != 'N') {
+      glyphName = type;
+    } else glyphName = key;
+    code = this.codeNoteHead(glyphName, duration);
 
     return {
       key,
       octave,
       line,
       intValue,
-      accidental: value.accidental,
+      acc: value.acc,
       code,
-      stroke,
-      shiftRight,
       displaced: false,
-      ...customNoteHeadProps,
     };
   }
 
@@ -862,49 +671,21 @@ export class Tables {
     return noteValue;
   }
 
-  static tabToGlyphProps(fret: string, scale: number = 1.0): GlyphProps {
-    let glyph = undefined;
-    let width = 0;
-    let shiftY = 0;
-
-    if (fret.toUpperCase() === 'X') {
-      const glyphMetrics = new Glyph('accidentalDoubleSharp', Tables.TABLATURE_FONT_SCALE).getMetrics();
-      glyph = 'accidentalDoubleSharp';
-      if (glyphMetrics.width == undefined || glyphMetrics.height == undefined)
-        throw new RuntimeError('InvalidMetrics', 'Width and height required');
-      width = glyphMetrics.width;
-      shiftY = -glyphMetrics.height / 2;
-    } else {
-      width = Tables.textWidth(fret);
-    }
-
-    return {
-      text: fret,
-      code: glyph,
-      getWidth: () => width * scale,
-      shiftY,
-    } as GlyphProps;
-  }
-
-  // Used by annotation.ts and bend.ts. Clearly this implementation only works for the default font size.
-  // TODO: The actual width depends on the font family, size, weight, style.
-  static textWidth(text: string): number {
-    return 7 * text.toString().length;
-  }
-
   static articulationCodes(artic: string): ArticulationStruct {
     return articulations[artic];
   }
 
   static accidentalMap = accidentals;
 
-  static accidentalCodes(acc: string): { code: string; parenRightPaddingAdjustment: number } {
-    return accidentals[acc];
+  static accidentalCodes(acc: string): string {
+    return accidentals[acc] != undefined
+      ? String.fromCharCode(accidentals[acc])
+      : String.fromCharCode(parseInt(acc, 16));
   }
 
   static accidentalColumnsTable = accidentalColumns;
 
-  static ornamentCodes(acc: string): { code: string } {
+  static ornamentCodes(acc: string): number {
     return ornaments[acc];
   }
 
@@ -997,284 +778,215 @@ export class Tables {
     return ticks;
   }
 
-  static codeNoteHead(type: string, duration: string): string {
-    let code = '';
+  static codeNoteHead(type: string, duration: string): number {
     switch (type) {
       /* Diamond */
       case 'D0':
-        code = 'noteheadDiamondWhole';
-        break;
+        return 0xe0d8 /*noteheadDiamondWhole*/;
       case 'D1':
-        code = 'noteheadDiamondHalf';
-        break;
+        return 0xe0d9 /*noteheadDiamondHalf*/;
       case 'D2':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
       case 'D3':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
 
       /* Triangle */
       case 'T0':
-        code = 'noteheadTriangleUpWhole';
-        break;
+        return 0xe0bb /*noteheadTriangleUpWhole*/;
       case 'T1':
-        code = 'noteheadTriangleUpHalf';
-        break;
+        return 0xe0bc /*noteheadTriangleUpHalf*/;
       case 'T2':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
       case 'T3':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
 
       /* Cross */
       case 'X0':
-        code = 'noteheadXWhole';
-        break;
+        return 0xe0a7 /*noteheadXWhole*/;
       case 'X1':
-        code = 'noteheadXHalf';
-        break;
+        return 0xe0a8 /*noteheadXHalf*/;
       case 'X2':
-        code = 'noteheadXBlack';
-        break;
+        return 0xe0a9 /*noteheadXBlack*/;
       case 'X3':
-        code = 'noteheadCircleX';
-        break;
+        return 0xe0b3 /*noteheadCircleX*/;
 
       /* Square */
       case 'S1':
-        code = 'noteheadSquareWhite';
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/;
       case 'S2':
-        code = 'noteheadSquareBlack';
-        break;
+        return 0xe0b9 /*noteheadSquareBlack*/;
 
       /* Rectangle */
       case 'R1':
-        code = 'vexNoteHeadRectWhite'; // no smufl code
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/; // no smufl code
       case 'R2':
-        code = 'vexNoteHeadRectBlack'; // no smufl code
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/; // no smufl code
 
       case 'DO':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
       case 'RE':
-        code = 'noteheadMoonBlack';
-        break;
+        return 0xe0cb /*noteheadMoonBlack*/;
       case 'MI':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
       case 'FA':
-        code = 'noteheadTriangleLeftBlack';
-        break;
+        return 0xe0c0 /*noteheadTriangleLeftBlack*/;
       case 'FAUP':
-        code = 'noteheadTriangleRightBlack';
-        break;
+        return 0xe0c2 /*noteheadTriangleRightBlack*/;
       case 'SO':
-        code = 'noteheadBlack';
-        break;
+        return 0xe0a4 /*noteheadBlack*/;
       case 'LA':
-        code = 'noteheadSquareBlack';
-        break;
+        return 0xe0b9 /*noteheadSquareBlack*/;
       case 'TI':
-        code = 'noteheadTriangleRoundDownBlack';
-        break;
+        return 0xe0cd /*noteheadTriangleRoundDownBlack*/;
 
-      case 'D':
-      case 'H': // left for backwards compatibility
+      /* Diamond */
+      case 'DI':
+      case 'H': // Harmonics
         switch (duration) {
           case '1/2':
-            code = 'noteheadDiamondDoubleWhole';
-            break;
+            return 0xe0d7 /*noteheadDiamondDoubleWhole*/;
           case '1':
-            code = 'noteheadDiamondWhole';
-            break;
+            return 0xe0d8 /*noteheadDiamondWhole*/;
           case '2':
-            code = 'noteheadDiamondHalf';
-            break;
+            return 0xe0d9 /*noteheadDiamondHalf*/;
           default:
-            code = 'noteheadDiamondBlack';
-            break;
+            return 0xe0db /*noteheadDiamondBlack*/;
         }
-        break;
-      case 'N':
-      case 'G':
-        switch (duration) {
-          case '1/2':
-            code = 'noteheadDoubleWhole';
-            break;
-          case '1':
-            code = 'noteheadWhole';
-            break;
-          case '2':
-            code = 'noteheadHalf';
-            break;
-          default:
-            code = 'noteheadBlack';
-            break;
-        }
-        break;
-      case 'M': // left for backwards compatibility
       case 'X':
+      case 'M': // Muted
         switch (duration) {
           case '1/2':
-            code = 'noteheadXDoubleWhole';
-            break;
+            return 0xe0a6 /*noteheadXDoubleWhole*/;
           case '1':
-            code = 'noteheadXWhole';
-            break;
+            return 0xe0a7 /*noteheadXWhole*/;
           case '2':
-            code = 'noteheadXHalf';
-            break;
+            return 0xe0a8 /*noteheadXHalf*/;
           default:
-            code = 'noteheadXBlack';
-            break;
+            return 0xe0a9 /*noteheadXBlack*/;
         }
-        break;
       case 'CX':
         switch (duration) {
           case '1/2':
-            code = 'noteheadCircleXDoubleWhole';
-            break;
+            return 0xe0b0 /*noteheadCircleXDoubleWhole*/;
           case '1':
-            code = 'noteheadCircleXWhole';
-            break;
+            return 0xe0b1 /*noteheadCircleXWhole*/;
           case '2':
-            code = 'noteheadCircleXHalf';
-            break;
+            return 0xe0b2 /*noteheadCircleXHalf*/;
           default:
-            code = 'noteheadCircleX';
-            break;
+            return 0xe0b3 /*noteheadCircleX*/;
         }
-        break;
       case 'CI':
         switch (duration) {
           case '1/2':
-            code = 'noteheadCircledDoubleWhole';
-            break;
+            return 0xe0e7 /*noteheadCircledDoubleWhole*/;
           case '1':
-            code = 'noteheadCircledWhole';
-            break;
+            return 0xe0e6 /*noteheadCircledWhole*/;
           case '2':
-            code = 'noteheadCircledHalf';
-            break;
+            return 0xe0e5 /*noteheadCircledHalf*/;
           default:
-            code = 'noteheadCircledBlack';
-            break;
+            return 0xe0e4 /*noteheadCircledBlack*/;
         }
-        break;
       case 'SQ':
         switch (duration) {
           case '1/2':
-            code = 'noteheadDoubleWholeSquare';
-            break;
+            return 0xe0a1 /*noteheadDoubleWholeSquare*/;
           case '1':
-            code = 'noteheadSquareWhite';
-            break;
+            return 0xe0b8 /*noteheadSquareWhite*/;
           case '2':
-            code = 'noteheadSquareWhite';
-            break;
+            return 0xe0b8 /*noteheadSquareWhite*/;
           default:
-            code = 'noteheadSquareBlack';
-            break;
+            return 0xe0b9 /*noteheadSquareBlack*/;
         }
-        break;
       case 'TU':
         switch (duration) {
           case '1/2':
-            code = 'noteheadTriangleUpDoubleWhole';
-            break;
+            return 0xe0ba /*noteheadTriangleUpDoubleWhole*/;
           case '1':
-            code = 'noteheadTriangleUpWhole';
-            break;
+            return 0xe0bb /*noteheadTriangleUpWhole*/;
           case '2':
-            code = 'noteheadTriangleUpHalf';
-            break;
+            return 0xe0bc /*noteheadTriangleUpHalf*/;
           default:
-            code = 'noteheadTriangleUpBlack';
-            break;
+            return 0xe0be /*noteheadTriangleUpBlack*/;
         }
-        break;
       case 'TD':
         switch (duration) {
           case '1/2':
-            code = 'noteheadTriangleDownDoubleWhole';
-            break;
+            return 0xe0c3 /*noteheadTriangleDownDoubleWhole*/;
           case '1':
-            code = 'noteheadTriangleDownWhole';
-            break;
+            return 0xe0c4 /*noteheadTriangleDownWhole*/;
           case '2':
-            code = 'noteheadTriangleDownHalf';
-            break;
+            return 0xe0c5 /*noteheadTriangleDownHalf*/;
           default:
-            code = 'noteheadTriangleDownBlack';
-            break;
+            return 0xe0c7 /*noteheadTriangleDownBlack*/;
         }
-        break;
       case 'SF':
         switch (duration) {
           case '1/2':
-            code = 'noteheadSlashedDoubleWhole1';
-            break;
+            return 0xe0d5 /*noteheadSlashedDoubleWhole1*/;
           case '1':
-            code = 'noteheadSlashedWhole1';
-            break;
+            return 0xe0d3 /*noteheadSlashedWhole1*/;
           case '2':
-            code = 'noteheadSlashedHalf1';
-            break;
+            return 0xe0d1 /*noteheadSlashedHalf1*/;
           default:
-            code = 'noteheadSlashedBlack1';
+            return 0xe0cf /*noteheadSlashedBlack1*/;
         }
-        break;
       case 'SB':
         switch (duration) {
           case '1/2':
-            code = 'noteheadSlashedDoubleWhole2';
-            break;
+            return 0xe0d6 /*noteheadSlashedDoubleWhole2*/;
           case '1':
-            code = 'noteheadSlashedWhole2';
-            break;
+            return 0xe0d4 /*noteheadSlashedWhole2*/;
           case '2':
-            code = 'noteheadSlashedHalf2';
-            break;
+            return 0xe0d2 /*noteheadSlashedHalf2*/;
           default:
-            code = 'noteheadSlashedBlack2';
+            return 0xe0d0 /*noteheadSlashedBlack2*/;
+        }
+      case 'R':
+        switch (duration) {
+          case '1/2':
+            return 0xe4e2 /*restDoubleWhole*/;
+          case '1':
+            return 0xe4e3 /*restWhole*/;
+          case '2':
+            return 0xe4e4 /*restHalf*/;
+          case '4':
+            return 0xe4e5 /*restQuarter*/;
+          case '8':
+            return 0xe4e6 /*rest8th*/;
+          case '16':
+            return 0xe4e7 /*rest16th*/;
+          case '32':
+            return 0xe4e8 /*rest32nd*/;
+          case '64':
+            return 0xe4e9 /*rest64th*/;
+          case '128':
+            return 0xe4ea /*rest128th*/;
         }
         break;
+      case 'S':
+        switch (duration) {
+          case '1/2':
+            return 0xe10a /*noteheadSlashWhiteDoubleWhole*/;
+          case '1':
+            return 0xe102 /*noteheadSlashWhiteWhole*/;
+          case '2':
+            return 0xe103 /*noteheadSlashWhiteHalf*/;
+          default:
+            return 0xe100 /*noteheadSlashVerticalEnds*/;
+        }
+      default:
+        switch (duration) {
+          case '1/2':
+            return 0xe0a0 /*noteheadDoubleWhole*/;
+          case '1':
+            return 0xe0a2 /*noteheadWhole*/;
+          case '2':
+            return 0xe0a3 /*noteheadHalf*/;
+          default:
+            return 0xe0a4 /*noteheadBlack*/;
+        }
     }
-    return code;
-  }
-
-  // Return a glyph given duration and type. The type can be a custom glyph code from customNoteHeads.
-  // The default type is a regular note ('n').
-  static getGlyphProps(duration: string, type: string = 'n'): GlyphProps {
-    duration = Tables.sanitizeDuration(duration);
-
-    // Lookup duration for default glyph head code
-    let code = durationCodes[duration];
-    if (code === undefined) {
-      code = durationCodes['4'];
-    }
-
-    // Get glyph properties for 'type' from duration string (note, rest, harmonic, muted, slash)
-    let glyphTypeProperties = code[type];
-
-    // Try and get it from the custom list of note heads
-    const codeNoteHead = Tables.codeNoteHead(type.toUpperCase(), duration);
-    if (codeNoteHead != '')
-      glyphTypeProperties = { ...glyphTypeProperties, ...{ codeHead: codeNoteHead, code: codeNoteHead } };
-
-    const codeHead = glyphTypeProperties.codeHead as string;
-
-    // The default implementation of getWidth() calls Glyph.getWidth(codeHead, scale).
-    // This can be overridden by an individual glyph type (see slash noteheads below: Tables.SLASH_NOTEHEAD_WIDTH).
-    const getWidth = (scale = Tables.NOTATION_FONT_SCALE): number => Glyph.getWidth(codeHead, scale);
-
-    // Merge duration props for 'duration' with the note head properties.
-    return { ...code.common, getWidth: getWidth, ...glyphTypeProperties } as GlyphProps;
+    return 0x0000;
   }
 
   /* The list of valid note types. Used by note.ts during parseNoteStruct(). */
@@ -1287,307 +999,3 @@ export class Tables {
     resolution: RESOLUTION,
   };
 }
-
-// 1/2, 1, 2, 4, 8, 16, 32, 64, 128
-// NOTE: There is no 256 here! However, there are other mentions of 256 in this file.
-// For example, in durations has a 256 key, and sanitizeDuration() can return 256.
-// The sanitizeDuration() bit may need to be removed by 0xfe.
-const durationCodes: Record<string, Record<string, Partial<GlyphProps>>> = {
-  '1/2': {
-    common: {
-      codeHead: '',
-      stem: false,
-      flag: false,
-      stemUpExtension: -Tables.STEM_HEIGHT,
-      stemDownExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemUpExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemDownExtension: -Tables.STEM_HEIGHT,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Breve rest
-      codeHead: 'restDoubleWhole',
-      rest: true,
-      position: 'B/5',
-      dotShiftY: 0.5,
-    },
-    s: {
-      // Breve note slash -
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  1: {
-    common: {
-      codeHead: '',
-      stem: false,
-      flag: false,
-      stemUpExtension: -Tables.STEM_HEIGHT,
-      stemDownExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemUpExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemDownExtension: -Tables.STEM_HEIGHT,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Whole rest
-      codeHead: 'restWhole',
-      ledgerCodeHead: 'restWholeLegerLine',
-      rest: true,
-      position: 'D/5',
-      dotShiftY: 0.5,
-    },
-    s: {
-      // Whole note slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  2: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: false,
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Half rest
-      codeHead: 'restHalf',
-      ledgerCodeHead: 'restHalfLegerLine',
-      stem: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-    },
-    s: {
-      // Half note slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  4: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: false,
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Quarter rest
-      codeHead: 'restQuarter',
-      stem: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.5,
-      lineBelow: 1.5,
-    },
-    s: {
-      // Quarter slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  8: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: true,
-      beamCount: 1,
-      stemBeamExtension: 0,
-      codeFlagUpstem: 'flag8thUp',
-      codeFlagDownstem: 'flag8thDown',
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Eighth rest
-      codeHead: 'rest8th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.0,
-      lineBelow: 1.0,
-    },
-    s: {
-      // Eighth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  16: {
-    common: {
-      codeHead: '',
-      beamCount: 2,
-      stemBeamExtension: 0,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag16thUp',
-      codeFlagDownstem: 'flag16thDown',
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Sixteenth rest
-      codeHead: 'rest16th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.0,
-      lineBelow: 2.0,
-    },
-    s: {
-      // Sixteenth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  32: {
-    common: {
-      codeHead: '',
-      beamCount: 3,
-      stemBeamExtension: 7.5,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag32ndUp',
-      codeFlagDownstem: 'flag32ndDown',
-      stemUpExtension: 9,
-      stemDownExtension: 9,
-      tabnoteStemUpExtension: 9,
-      tabnoteStemDownExtension: 9,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Thirty-second rest
-      codeHead: 'rest32nd',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -1.5,
-      lineAbove: 2.0,
-      lineBelow: 2.0,
-    },
-    s: {
-      // Thirty-second slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  64: {
-    common: {
-      codeHead: '',
-      beamCount: 4,
-      stemBeamExtension: 15,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag64thUp',
-      codeFlagDownstem: 'flag64thDown',
-      stemUpExtension: 13,
-      stemDownExtension: 13,
-      tabnoteStemUpExtension: 13,
-      tabnoteStemDownExtension: 13,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Sixty-fourth rest
-      codeHead: 'rest64th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -1.5,
-      lineAbove: 2.0,
-      lineBelow: 3.0,
-    },
-    s: {
-      // Sixty-fourth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  128: {
-    common: {
-      codeHead: '',
-      beamCount: 5,
-      stemBeamExtension: 22.5,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag128thUp',
-      codeFlagDownstem: 'flag128thDown',
-      stemUpExtension: 22,
-      stemDownExtension: 22,
-      tabnoteStemUpExtension: 22,
-      tabnoteStemDownExtension: 22,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Hundred-twenty-eight rest
-      codeHead: 'rest128th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -2.5,
-      lineAbove: 3.0,
-      lineBelow: 3.0,
-    },
-    s: {
-      // Hundred-twenty-eight slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-};

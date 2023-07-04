@@ -1,9 +1,9 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // @author: Larry Kuhns 2011
 
+import { Font } from './font';
 import { Stave } from './stave';
 import { StaveModifier } from './stavemodifier';
-import { TextFormatter } from './textformatter';
 import { Category } from './typeguard';
 
 export class StaveSection extends StaveModifier {
@@ -51,12 +51,11 @@ export class StaveSection extends StaveModifier {
     ctx.save();
     ctx.setLineWidth(borderWidth);
     ctx.setFont(this.textFont);
-    const textFormatter = TextFormatter.create(this.textFont);
 
-    const textWidth = textFormatter.getWidthForTextInPx(this.section);
-    const textY = textFormatter.getYForStringInPx(this.section);
-    const textHeight = textY.height;
-    const headroom = -1 * textY.yMin;
+    const textMeasurements = Font.textMetrics(this.section, this.textFont);
+    const textWidth = textMeasurements.width;
+    const textHeight = textMeasurements.actualBoundingBoxAscent + textMeasurements.actualBoundingBoxDescent;
+    const headroom = -1 * textMeasurements.actualBoundingBoxDescent;
     const width = textWidth + 2 * padding; // add left & right padding
     const height = textHeight + 2 * padding; // add top & bottom padding
 

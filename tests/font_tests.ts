@@ -9,10 +9,10 @@ import { Accidental } from '../src/accidental';
 import { Bend } from '../src/bend';
 import { CanvasContext } from '../src/canvascontext';
 import { Flow } from '../src/flow';
-import { Font, FontStyle, FontWeight } from '../src/font';
+import { Font } from '../src/font';
 import { PedalMarking } from '../src/pedalmarking';
 import { StaveNote } from '../src/stavenote';
-import { CommonMetrics } from '../src/tables';
+import { Tables } from '../src/tables';
 import { TextBracket } from '../src/textbracket';
 import { TextNote } from '../src/textnote';
 import { Voice } from '../src/voice';
@@ -53,27 +53,30 @@ function setFont(assert: Assert): void {
   const flat = new Accidental('b');
   // Add italic to the default font as defined in Element.TEXT_FONT (since Accidental does not override TEXT_FONT).
   flat.setFont(undefined, undefined, undefined, 'italic');
-  assert.equal(flat.getFont(), 'italic 30pt Bravura,Gonville,Custom');
+  assert.equal(flat.getFont(), 'italic 30pt Bravura');
   // Anything that is not set will be reset to the defaults.
   flat.setFont(undefined, undefined, 'bold', undefined);
-  assert.equal(flat.getFont(), 'bold 30pt Bravura,Gonville,Custom');
+  assert.equal(flat.getFont(), 'bold 30pt Bravura');
   flat.setFont(undefined, undefined, 'bold', 'italic');
-  assert.equal(flat.getFont(), 'italic bold 30pt Bravura,Gonville,Custom');
+  assert.equal(flat.getFont(), 'italic bold 30pt Bravura');
   flat.setFont(undefined, undefined, 'bold', 'oblique');
-  assert.equal(flat.getFont(), 'oblique bold 30pt Bravura,Gonville,Custom');
+  assert.equal(flat.getFont(), 'oblique bold 30pt Bravura');
   // '' is equivalent to 'normal'. Neither will be included in the CSS font string.
   flat.setFont(undefined, undefined, 'normal', '');
-  assert.equal(flat.getFont(), '30pt Bravura,Gonville,Custom');
+  assert.equal(flat.getFont(), '30pt Bravura');
 }
 
 function fontParsing(assert: Assert): void {
-  const b = new Bend('1/2', true);
+  const b = new Bend([
+    { type: Bend.UP, text: '1/2' },
+    { type: Bend.DOWN, text: '' },
+  ]);
   const bFont = b.fontInfo;
   // Check the default font.
-  assert.equal(bFont?.family, Font.SANS_SERIF);
-  assert.equal(bFont?.size, Font.SIZE);
-  assert.equal(bFont?.weight, FontWeight.NORMAL);
-  assert.equal(bFont?.style, FontStyle.NORMAL);
+  assert.equal(bFont?.family, 'Bravura');
+  assert.equal(bFont?.size, Tables.TEXT_FONT_SCALE);
+  assert.equal(bFont?.weight, 'normal');
+  assert.equal(bFont?.style, 'normal');
 
   const f1 = 'Roboto Slab, serif';
   const t = new TextNote({ duration: '4', font: { family: f1 } });
@@ -84,7 +87,7 @@ function fontParsing(assert: Assert): void {
   const tb = new TextBracket({ start: n1, stop: n2 });
   const f2 = tb.fontInfo;
   assert.equal(f2?.size, 15);
-  assert.equal(f2?.style, FontStyle.ITALIC);
+  assert.equal(f2?.style, 'italic');
 
   // The line-height /3 is currently ignored.
   const f3 = Font.fromCSSString(`bold 1.5em/3 "Lucida Sans Typewriter", "Lucida Console", Consolas, monospace`);
@@ -107,7 +110,7 @@ function fontSizes(assert: Assert): void {
 
   {
     const pedal = new PedalMarking([]);
-    assert.equal(pedal.getFont(), 'italic bold 12pt Times New Roman, serif');
+    assert.equal(pedal.getFont(), 'italic bold 12 Bravura');
     assert.equal(pedal.fontSizeInPoints, 12);
     assert.equal(pedal.fontSizeInPixels, 16);
     const doubledSizePx = pedal.fontSizeInPixels * 2; // Double the font size.
