@@ -1,14 +1,11 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // MIT License
-import { Element } from './element';
-import { FontInfo } from './font';
 import { Modifier, ModifierPosition } from './modifier';
 import { ModifierContextState } from './modifiercontext';
 import { Stave } from './stave';
 import { Stem } from './stem';
 import { StemmableNote } from './stemmablenote';
 import { Tables } from './tables';
-import { TextFormatter } from './textformatter';
 import { Category, isStemmableNote, isTabNote } from './typeguard';
 import { log } from './util';
 
@@ -46,8 +43,6 @@ export class Annotation extends Modifier {
     return Category.Annotation;
   }
 
-  static TEXT_FONT: Required<FontInfo> = { ...Element.TEXT_FONT };
-
   /** Text annotations can be positioned and justified relative to the note. */
   static HorizontalJustify = AnnotationHorizontalJustify;
 
@@ -72,8 +67,7 @@ export class Annotation extends Modifier {
   // Use the same padding for annotations as note head so the
   // words don't run into each other.
   static get minAnnotationPadding(): number {
-    const musicFont = Tables.currentMusicFont();
-    return musicFont.lookupMetric('noteHead.minPadding');
+    return Tables.lookupMetric('noteHead.minPadding');
   }
   /** Arrange annotations within a `ModifierContext` */
   static format(annotations: Annotation[], state: ModifierContextState): boolean {
@@ -84,15 +78,14 @@ export class Annotation extends Modifier {
     let maxRightGlyphWidth = 0;
     for (let i = 0; i < annotations.length; ++i) {
       const annotation = annotations[i];
-      const textFormatter = TextFormatter.create(annotation.textFont);
       // Text height is expressed in fractional stave spaces.
-      const textLines = (2 + textFormatter.getYForStringInPx(annotation.text).height) / Tables.STAVE_LINE_DISTANCE;
+      const textLines = (2 + (annotation.boundingBox?.getH() ?? 0)) / Tables.STAVE_LINE_DISTANCE;
       let verticalSpaceNeeded = textLines;
 
       const note = annotation.checkAttachedNote();
-      const glyphWidth = note.getGlyphProps().getWidth();
+      const glyphWidth = note.getGlyphWidth();
       // Get the text width from the font metrics.
-      const textWidth = textFormatter.getWidthForTextInPx(annotation.text);
+      const textWidth = annotation.boundingBox?.getW() ?? 0;
       if (annotation.horizontalJustification === AnnotationHorizontalJustify.LEFT) {
         maxLeftGlyphWidth = Math.max(glyphWidth, maxLeftGlyphWidth);
         leftWidth = Math.max(leftWidth, textWidth) + Annotation.minAnnotationPadding;
@@ -180,7 +173,6 @@ export class Annotation extends Modifier {
 
   protected horizontalJustification: AnnotationHorizontalJustify;
   protected verticalJustification: AnnotationVerticalJustify;
-  protected text: string;
 
   /**
    * Annotations inherit from `Modifier` and is positioned correctly when
@@ -195,11 +187,10 @@ export class Annotation extends Modifier {
     // warning: the default in the constructor is TOP, but in the factory the default is BOTTOM.
     // this is to support legacy application that may expect this.
     this.verticalJustification = AnnotationVerticalJustify.TOP;
-    this.resetFont();
 
-    // The default width is calculated from the text.
-    this.setWidth(Tables.textWidth(text));
+    this.measureText();
   }
+
   /**
    * Set vertical position of text (above or below stave).
    * @param just value in `AnnotationVerticalJustify`.
@@ -230,33 +221,27 @@ export class Annotation extends Modifier {
     const ctx = this.checkContext();
     const note = this.checkAttachedNote();
     const stemDirection = note.hasStem() ? note.getStemDirection() : Stem.UP;
-    const textFormatter = TextFormatter.create(this.textFont);
     const start = note.getModifierStartXY(ModifierPosition.ABOVE, this.index);
 
     this.setRendered();
 
-    // We're changing context parameters. Save current state.
-    ctx.save();
     // Apply style might not save context, if this.style is undefined, so we
     // still need to save context state just before this, since we will be
     // changing ctx parameters below.
     this.applyStyle();
     ctx.openGroup('annotation', this.getAttribute('id'));
-    ctx.setFont(this.textFont);
 
-    const textWidth = textFormatter.getWidthForTextInPx(this.text);
-    const textHeight = textFormatter.getYForStringInPx(this.text).height;
     let x;
     let y;
 
     if (this.horizontalJustification === AnnotationHorizontalJustify.LEFT) {
       x = start.x;
     } else if (this.horizontalJustification === AnnotationHorizontalJustify.RIGHT) {
-      x = start.x - textWidth;
+      x = start.x - this.getWidth();
     } else if (this.horizontalJustification === AnnotationHorizontalJustify.CENTER) {
-      x = start.x - textWidth / 2;
+      x = start.x - this.getWidth() / 2;
     } /* CENTER_STEM */ else {
-      x = (note as StemmableNote).getStemX() - textWidth / 2;
+      x = (note as StemmableNote).getStemX() - this.getWidth() / 2;
     }
 
     let stemExt: Record<string, number> = {};
@@ -275,14 +260,14 @@ export class Annotation extends Modifier {
       // Use the largest (lowest) Y value
       const ys: number[] = note.getYs();
       y = ys.reduce((a, b) => (a > b ? a : b));
-      y += (this.textLine + 1) * Tables.STAVE_LINE_DISTANCE + textHeight;
+      y += (this.textLine + 1) * Tables.STAVE_LINE_DISTANCE + this.getHeight();
       if (hasStem && stemDirection === Stem.DOWN) {
-        y = Math.max(y, stemExt.topY + textHeight + spacing * this.textLine);
+        y = Math.max(y, stemExt.topY + this.getHeight() + spacing * this.textLine);
       }
     } else if (this.verticalJustification === AnnotationVerticalJustify.CENTER) {
       const yt = note.getYForTopText(this.textLine) - 1;
       const yb = stave.getYForBottomText(this.textLine);
-      y = yt + (yb - yt) / 2 + textHeight / 2;
+      y = yt + (yb - yt) / 2 + this.getHeight() / 2;
     } else if (this.verticalJustification === AnnotationVerticalJustify.TOP) {
       const topY = Math.min(...note.getYs());
       y = topY - (this.textLine + 1) * Tables.STAVE_LINE_DISTANCE;
@@ -294,13 +279,12 @@ export class Annotation extends Modifier {
       }
     } /* CENTER_STEM */ else {
       const extents = note.getStemExtents();
-      y = extents.topY + (extents.baseY - extents.topY) / 2 + textHeight / 2;
+      y = extents.topY + (extents.baseY - extents.topY) / 2 + this.getHeight() / 2;
     }
 
     L('Rendering annotation: ', this.text, x, y);
-    ctx.fillText(this.text, x, y);
+    this.renderText(ctx, x, y);
     ctx.closeGroup();
     this.restoreStyle();
-    ctx.restore();
   }
 }

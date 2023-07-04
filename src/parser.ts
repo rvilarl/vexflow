@@ -79,7 +79,7 @@ export class Parser {
   protected pos: number;
   protected errorPos: number;
 
-  // For an example of a simple grammar, take a look at tests/parser_tests.ts or
+  // For an example of a simple grammar, take a look at tests/parserTests.ts or
   // the EasyScore grammar in easyscore.ts.
   constructor(grammar: Grammar) {
     this.grammar = grammar;

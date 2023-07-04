@@ -52,7 +52,7 @@ function setupContext(options: TestOptions, width?: number): { context: RenderCo
   context.scale(0.9, 0.9);
 
   context.font = '10pt Arial';
-  const stave = new TabStave(10, 10, width || 350).addTabGlyph().setContext(context).draw();
+  const stave = new TabStave(10, 10, width || 350).addClef('tab').setContext(context).draw();
 
   return { context, stave };
 }

@@ -6,7 +6,7 @@
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
 import { Dot } from '../src/dot';
-import { Font, FontStyle } from '../src/font';
+import { Tables } from '../src/tables';
 
 const StaveLineTests = {
   Start(): void {
@@ -36,7 +36,7 @@ function simple0(options: TestOptions): void {
     firstIndices: [0],
     lastIndices: [0],
     options: {
-      font: { family: Font.SERIF, size: 12, style: FontStyle.ITALIC },
+      font: { family: Tables.lookupMetric('fontFamily'), size: 12, style: 'italic' },
       text: 'gliss.',
     },
   });

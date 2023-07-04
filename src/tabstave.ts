@@ -23,9 +23,4 @@ export class TabStave extends Stave {
     return this.getYForLine(2.5);
   }
 
-  // Deprecated
-  addTabGlyph(): this {
-    this.addClef('tab');
-    return this;
-  }
 }

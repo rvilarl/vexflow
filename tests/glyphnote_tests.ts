@@ -6,7 +6,6 @@
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
 import { ChordSymbol } from '../src/chordsymbol';
-import { Glyph } from '../src/glyph';
 import { Note } from '../src/note';
 import { Registry } from '../src/registry';
 import { StaveConnector } from '../src/staveconnector';
@@ -38,13 +37,13 @@ function chordChanges(options: TestOptions): void {
   const score = f.EasyScore();
 
   const notes = [
-    f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: 'q' }),
-    f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: 'q' }),
-    f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: 'q' }),
-    f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: 'q' }),
+    f.GlyphNote('E504' /*repeatBarSlash*/, { duration: 'q' }),
+    f.GlyphNote('E504' /*repeatBarSlash*/, { duration: 'q' }),
+    f.GlyphNote('E504' /*repeatBarSlash*/, { duration: 'q' }),
+    f.GlyphNote('E504' /*repeatBarSlash*/, { duration: 'q' }),
   ];
   const chord1 = f
-    .ChordSymbol({ reportWidth: false })
+    .ChordSymbol()
     .addText('F7')
     .setHorizontal('left')
     .addGlyphOrText('(#11b9)', { symbolModifier: ChordSymbol.symbolModifiers.SUPERSCRIPT });
@@ -84,13 +83,13 @@ function basic(options: TestOptions): void {
   const newStave = (voice: Voice) => system.addStave({ voices: [voice], debugNoteMetrics: options.params.debug });
 
   const voices: Note[][] = [
-    [f.GlyphNote(new Glyph('repeat1Bar', 40), { duration: 'q' }, { line: 4 })],
-    [f.GlyphNote(new Glyph('repeat2Bars', 40), { duration: 'q', alignCenter: true })],
+    [f.GlyphNote('E500' /*repeat1Bar*/, { duration: 'q' }, { line: 4 })],
+    [f.GlyphNote('E501' /*repeat2Bars*/, { duration: 'q', alignCenter: true })],
     [
-      f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: '16' }),
-      f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: '16' }),
-      f.GlyphNote(new Glyph('repeat4Bars', 40), { duration: '16' }),
-      f.GlyphNote(new Glyph('repeatBarSlash', 40), { duration: '16' }),
+      f.GlyphNote('E504' /*repeatBarSlash*/, { duration: '16' }),
+      f.GlyphNote('E504' /*repeatBarSlash*/, { duration: '16' }),
+      f.GlyphNote('E502' /*repeat4Bars*/, { duration: '16' }),
+      f.GlyphNote('E504' /*repeatBarSlash*/, { duration: '16' }),
     ],
   ];
 

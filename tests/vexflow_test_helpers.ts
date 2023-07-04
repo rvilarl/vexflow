@@ -5,6 +5,7 @@
 
 import { ContextBuilder, Factory, Flow, Font, RenderContext, Renderer } from '../src/index';
 
+import { Tables } from '../src/tables';
 import { globalObject } from '../src/util';
 
 // eslint-disable-next-line
@@ -115,7 +116,7 @@ const SVG_TEST_CONFIG = {
   backend: Renderer.Backends.SVG,
   tagName: 'div',
   testType: 'SVG',
-  fontStacks: ['Bravura', 'Gonville', 'Petaluma', 'Leland'],
+  fontStacks: ['Bravura', 'Gonville', 'Petaluma', 'Leland'], //, 'Gootville', 'MuseJazz', 'FinaleJazz', 'FinaleAsh', 'FinaleBroadway', 'FinaleMaestro'],
 };
 
 const SVG_TEXT_CONFIG = {
@@ -139,7 +140,7 @@ interface Test {
 export class VexFlowTests {
   static tests: Test[] = [];
 
-  // Call this at the end of a `tests/xxxx_tests.ts` file to register the module.
+  // Call this at the end of a `tests/xxxxTests.ts` file to register the module.
   static register(test: Test): void {
     VexFlowTests.tests.push(test);
   }
@@ -195,10 +196,16 @@ export class VexFlowTests {
    * Each font stack is a prioritized list of font names.
    */
   static FONT_STACKS: Record<string, string[]> = {
-    Bravura: ['Bravura', 'Custom'],
-    Gonville: ['Gonville', 'Bravura', 'Custom'],
-    Petaluma: ['Petaluma', 'Gonville', 'Bravura', 'Custom'],
-    Leland: ['Leland', 'Bravura', 'Custom'],
+    Bravura: ['Bravura', 'BravuraText'],
+    Gonville: ['GonvilleSmufl', 'Bravura', 'Arial'],
+    Petaluma: ['Petaluma', 'Bravura', 'PetalumaScript'],
+    Leland: ['Leland', 'Bravura', 'LelandText'],
+    Gootville: ['Gootville', 'Bravura', 'GootvilleText'],
+    MuseJazz: ['MuseJazz', 'Bravura', 'MuseJazzText'],
+    FinaleAsh: ['FinaleAsh', 'Bravura', 'FinaleAshText'],
+    FinaleJazz: ['FinaleJazz', 'Bravura', 'FinaleJazzText'],
+    FinaleBroadway: ['FinaleBroadway', 'Bravura', 'FinaleBroadwayText'],
+    FinaleMaestro: ['FinaleMaestro', 'Bravura', 'FinaleMaestroText'],
   };
 
   static set NODE_FONT_STACKS(fontStacks: string[]) {
@@ -361,7 +368,7 @@ export class VexFlowTests {
    */
   static plotLegendForNoteWidth(ctx: RenderContext, x: number, y: number): void {
     ctx.save();
-    ctx.setFont(Font.SANS_SERIF, 8);
+    ctx.setFont(Tables.lookupMetric('fontFamily'), 8);
 
     const spacing = 12;
     let lastY = y;

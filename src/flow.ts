@@ -5,15 +5,8 @@ import { BarNote } from './barnote';
 import { Beam } from './beam';
 import { Bend } from './bend';
 import { BoundingBox } from './boundingbox';
-import { BoundingBoxComputation } from './boundingboxcomputation';
 import { CanvasContext } from './canvascontext';
-import {
-  ChordSymbol,
-  ChordSymbolHorizontalJustify,
-  ChordSymbolVerticalJustify,
-  SymbolModifiers,
-  SymbolTypes,
-} from './chordsymbol';
+import { ChordSymbol, ChordSymbolHorizontalJustify, ChordSymbolVerticalJustify, SymbolModifiers } from './chordsymbol';
 import { Clef } from './clef';
 import { ClefNote } from './clefnote';
 import { Crescendo } from './crescendo';
@@ -22,12 +15,11 @@ import { Dot } from './dot';
 import { EasyScore } from './easyscore';
 import { Element } from './element';
 import { Factory } from './factory';
-import { Font, FontModule, FontStyle, FontWeight } from './font';
+import { Font } from './font';
 import { Formatter } from './formatter';
 import { Fraction } from './fraction';
 import { FretHandFinger } from './frethandfinger';
 import { GhostNote } from './ghostnote';
-import { Glyph } from './glyph';
 import { GlyphNote } from './glyphnote';
 import { GraceNote } from './gracenote';
 import { GraceNoteGroup } from './gracenotegroup';
@@ -67,14 +59,13 @@ import { StringNumber } from './stringnumber';
 import { Stroke } from './strokes';
 import { SVGContext } from './svgcontext';
 import { System } from './system';
-import { Tables } from './tables';
+import { CommonMetrics, Tables } from './tables';
 import { TabNote } from './tabnote';
 import { TabSlide } from './tabslide';
 import { TabStave } from './tabstave';
 import { TabTie } from './tabtie';
 import { TextBracket, TextBracketPosition } from './textbracket';
 import { TextDynamics } from './textdynamics';
-import { TextFormatter } from './textformatter';
 import { TextJustification, TextNote } from './textnote';
 import { TickContext } from './tickcontext';
 import { TimeSignature } from './timesignature';
@@ -107,7 +98,6 @@ export class Flow {
   static Beam = Beam;
   static Bend = Bend;
   static BoundingBox = BoundingBox;
-  static BoundingBoxComputation = BoundingBoxComputation;
   static CanvasContext = CanvasContext;
   static ChordSymbol = ChordSymbol;
   static Clef = Clef;
@@ -123,7 +113,6 @@ export class Flow {
   static Fraction = Fraction;
   static FretHandFinger = FretHandFinger;
   static GhostNote = GhostNote;
-  static Glyph = Glyph;
   static GlyphNote = GlyphNote;
   static GraceNote = GraceNote;
   static GraceNoteGroup = GraceNoteGroup;
@@ -167,7 +156,6 @@ export class Flow {
   static TabTie = TabTie;
   static TextBracket = TextBracket;
   static TextDynamics = TextDynamics;
-  static TextFormatter = TextFormatter;
   static TextNote = TextNote;
   static TickContext = TickContext;
   static TimeSignature = TimeSignature;
@@ -186,11 +174,8 @@ export class Flow {
   static AnnotationVerticalJustify = AnnotationVerticalJustify;
   static ChordSymbolHorizontalJustify = ChordSymbolHorizontalJustify;
   static ChordSymbolVerticalJustify = ChordSymbolVerticalJustify;
-  static SymbolTypes = SymbolTypes;
   static SymbolModifiers = SymbolModifiers;
   static CurvePosition = CurvePosition;
-  static FontWeight = FontWeight;
-  static FontStyle = FontStyle;
   static ModifierPosition = ModifierPosition;
   static RendererBackends = RendererBackends;
   static RendererLineEndType = RendererLineEndType;
@@ -227,31 +212,13 @@ export class Flow {
    *
    * @returns an array of Font objects corresponding to the provided `fontNames`.
    */
-  static setMusicFont(...fontNames: string[]): Font[] {
+  static setMusicFont(...fontNames: string[]): void {
     // Convert the array of font names into an array of Font objects.
-    const fonts = fontNames.map((fontName) => Font.load(fontName));
-    Tables.MUSIC_FONT_STACK = fonts;
-    Glyph.MUSIC_FONT_STACK = fonts.slice();
-    Glyph.CURRENT_CACHE_KEY = fontNames.join(',');
-    return fonts;
-  }
-
-  /**
-   * Used with vexflow-core which supports dynamic font loading.
-   */
-  // eslint-disable-next-line
-  static async fetchMusicFont(fontName: string, fontModuleOrPath?: string | FontModule): Promise<void> {
-    // The default implementation does nothing.
-    // See vexflow-core.ts for the implementation that vexflow-core.js uses.
+    CommonMetrics.fontFamily = fontNames.join(',');
   }
 
   static getMusicFont(): string[] {
-    const fonts = Tables.MUSIC_FONT_STACK;
-    return fonts.map((font) => font.getName());
-  }
-
-  static getMusicFontStack(): Font[] {
-    return Tables.MUSIC_FONT_STACK;
+    return Tables.lookupMetric('fontFamily').split(',');
   }
 
   static get RENDER_PRECISION_PLACES(): number {
@@ -270,29 +237,11 @@ export class Flow {
     Tables.SOFTMAX_FACTOR = factor;
   }
 
-  static get NOTATION_FONT_SCALE(): number {
-    return Tables.NOTATION_FONT_SCALE;
-  }
-  static set NOTATION_FONT_SCALE(value: number) {
-    Tables.NOTATION_FONT_SCALE = value;
-  }
-  static get TABLATURE_FONT_SCALE(): number {
-    return Tables.TABLATURE_FONT_SCALE;
-  }
-  static set TABLATURE_FONT_SCALE(value: number) {
-    Tables.TABLATURE_FONT_SCALE = value;
-  }
   static get RESOLUTION(): number {
     return Tables.RESOLUTION;
   }
   static set RESOLUTION(value: number) {
     Tables.RESOLUTION = value;
-  }
-  static get SLASH_NOTEHEAD_WIDTH(): number {
-    return Tables.SLASH_NOTEHEAD_WIDTH;
-  }
-  static set SLASH_NOTEHEAD_WIDTH(value: number) {
-    Tables.SLASH_NOTEHEAD_WIDTH = value;
   }
   static get STAVE_LINE_DISTANCE(): number {
     return Tables.STAVE_LINE_DISTANCE;
@@ -321,7 +270,7 @@ export class Flow {
   static get TIME4_4(): { numBeats: number; beatValue: number; resolution: number } {
     return Tables.TIME4_4;
   }
-  static get accidentalMap(): Record<string, { code: string; parenRightPaddingAdjustment: number }> {
+  static get accidentalMap(): Record<string, number> {
     return Tables.accidentalMap;
   }
   static get unicode(): Record<string, string> {

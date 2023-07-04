@@ -7,9 +7,9 @@ import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
 import { Crescendo } from '../src/crescendo';
 import { Flow } from '../src/flow';
-import { Font } from '../src/font';
 import { Note } from '../src/note';
 import { Stave } from '../src/stave';
+import { Tables } from '../src/tables';
 import { TextNote } from '../src/textnote';
 
 const TextNoteTests = {
@@ -140,7 +140,7 @@ function superscriptAndSubscript(options: TestOptions): void {
   const voice2 = score.voice(notes2);
   voice2.getTickables().forEach((note) => {
     const textNote = note as TextNote;
-    textNote.setFont({ family: Font.SERIF, size: 15 });
+    textNote.setFont({ family: Tables.lookupMetric('fontFamily'), size: 15 });
     textNote.setLine(13);
     textNote.setJustification(TextNote.Justification.LEFT);
   });
@@ -177,8 +177,8 @@ function formatTextGlyphs0(options: TestOptions): void {
 
     f.TextNote({ glyph: 'mordentUpper', duration: '16' }),
     f.TextNote({ glyph: 'mordentLower', duration: '16' }),
-    f.TextNote({ glyph: 'segno', duration: '8' }),
-    f.TextNote({ glyph: 'coda', duration: '8' }),
+    f.TextNote({ glyph: 'E047' /*segno*/, duration: '8' }),
+    f.TextNote({ glyph: 'E048' /*coda*/, duration: '8' }),
   ]);
 
   (voice2.getTickables() as TextNote[]).forEach((n) => n.setJustification(TextNote.Justification.CENTER));

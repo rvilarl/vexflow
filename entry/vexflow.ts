@@ -8,12 +8,8 @@
 // The webpack config inside Gruntfile.js sets the mode to 'production' to produce a minified build.
 
 import { Flow } from '../src/flow';
-import { loadAllMusicFonts } from '../src/fonts/load_all';
-import { loadTextFonts } from '../src/fonts/textfonts';
 
-loadAllMusicFonts();
-Flow.setMusicFont('Bravura', 'Gonville', 'Custom');
-loadTextFonts();
+Flow.setMusicFont('Bravura');
 
 // Re-export all exports from index.ts.
 export * from '../src/index';

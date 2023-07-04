@@ -159,7 +159,13 @@ export class StaveHairpin extends Element {
     return this;
   }
 
-  renderHairpin(params: { firstX: number; lastX: number; firstY: number; lastY: number; staffHeight: number }): void {
+  renderHairpin(params: {
+    firstX: number;
+    lastX: number;
+    firstY: number;
+    lastY: number;
+    staffHeight: number;
+  }): void {
     const ctx = this.checkContext();
     let dis = this.renderOptions.yShift + 20;
     let yShift = params.firstY;

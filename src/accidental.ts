@@ -4,7 +4,6 @@
 // @author Greg Ristow (modifications)
 
 import { Fraction } from './fraction';
-import { Glyph } from './glyph';
 import { Modifier } from './modifier';
 import { ModifierContextState } from './modifiercontext';
 import { Music } from './music';
@@ -15,18 +14,10 @@ import { Category, isAccidental, isGraceNote, isGraceNoteGroup, isStaveNote } fr
 import { defined, log } from './util';
 import { Voice } from './voice';
 
-type StaveLineAccidentalLayoutMetrics = {
+export type Line = {
   column: number;
   line: number;
-  /**
-   * A flat line needs more clearance above than below. This is
-   * set to true if the accidental is either a flat or double flat.
-   */
   flatLine: boolean;
-  /**
-   * Double sharps need less clearance above and below than other
-   * accidentals.
-   */
   dblSharpLine: boolean;
   numAcc: number;
   width: number;
@@ -42,7 +33,7 @@ function L(...args: any[]) {
  * `ModifierContext`. Accidentals are modifiers that can be attached to
  * notes. Support is included for both western and microtonal accidentals.
  *
- * See `tests/accidental_tests.ts` for usage examples.
+ * See `tests/accidentalTests.ts` for usage examples.
  */
 
 export class Accidental extends Modifier {
@@ -50,20 +41,8 @@ export class Accidental extends Modifier {
   readonly type: string;
   /** To enable logging for this class. Set `Vex.Flow.Accidental.DEBUG` to `true`. */
   static DEBUG: boolean = false;
-  protected accidental: {
-    code: string;
-    parenRightPaddingAdjustment: number;
-  };
-  public renderOptions: {
-    parenLeftPadding: number;
-    fontScale: number;
-    parenRightPadding: number;
-  };
+  protected accidental: string;
   protected cautionary: boolean;
-  // initialised in reset which is called by the constructor
-  protected glyph!: Glyph;
-  protected parenRight?: Glyph;
-  protected parenLeft?: Glyph;
 
   /** Accidentals category string. */
   static get CATEGORY(): string {
@@ -75,28 +54,23 @@ export class Accidental extends Modifier {
     // If there are no accidentals, no need to format their positions.
     if (!accidentals || accidentals.length === 0) return;
 
-    const musicFont = Tables.currentMusicFont();
-    const noteheadAccidentalPadding = musicFont.lookupMetric('accidental.noteheadAccidentalPadding');
-    const leftShift = state.leftShift + noteheadAccidentalPadding;
-    const accidentalSpacing = musicFont.lookupMetric('accidental.accidentalSpacing');
-    const additionalPadding = musicFont.lookupMetric('accidental.leftPadding'); // padding to the left of all accidentals
+    const rightPadding = Tables.lookupMetric('Accidental.rightPadding');
+    const leftShift = state.leftShift + rightPadding;
+    const spacing = Tables.lookupMetric('Accidental.spacing');
+    const leftPadding = Tables.lookupMetric('Accidental.leftPadding'); // padding to the left of all accidentals
 
     // A type used just in this formatting function.
-    type AccidentalLinePositionsAndXSpaceNeeds = {
+    type AccidentalListItem = {
       y?: number;
       line: number;
-      /**
-       * The amount by which the accidental requests notes be shifted to the right
-       * to accomodate its presence.
-       */
-      extraXSpaceNeeded: number;
+      shift: number;
       acc: Accidental;
-      spacingBetweenStaveLines?: number;
+      lineSpace?: number;
     };
 
-    const accidentalLinePositionsAndSpaceNeeds: AccidentalLinePositionsAndXSpaceNeeds[] = [];
+    const accList: AccidentalListItem[] = [];
     let prevNote = undefined;
-    let extraXSpaceNeededForLeftDisplacedNotehead = 0;
+    let shiftL = 0;
 
     // First determine the accidentals' Y positions from the note.keys
     for (let i = 0; i < accidentals.length; ++i) {
@@ -106,16 +80,10 @@ export class Accidental extends Modifier {
       const stave = note.getStave();
       const index = acc.checkIndex();
       const props = note.getKeyProps()[index];
-
       if (note !== prevNote) {
         // Iterate through all notes to get the displaced pixels
         for (let n = 0; n < note.keys.length; ++n) {
-          // If the current extra left-space needed isn't as big as this note's,
-          // then we need to use this note's.
-          extraXSpaceNeededForLeftDisplacedNotehead = Math.max(
-            note.getLeftDisplacedHeadPx() - note.getXShift(),
-            extraXSpaceNeededForLeftDisplacedNotehead
-          );
+          shiftL = Math.max(note.getLeftDisplacedHeadPx() - note.getXShift(), shiftL);
         }
         prevNote = note;
       }
@@ -123,80 +91,64 @@ export class Accidental extends Modifier {
         const lineSpace = stave.getSpacingBetweenLines();
         const y = stave.getYForLine(props.line);
         const accLine = Math.round((y / lineSpace) * 2) / 2;
-        accidentalLinePositionsAndSpaceNeeds.push({
-          y,
-          line: accLine,
-          extraXSpaceNeeded: extraXSpaceNeededForLeftDisplacedNotehead,
-          acc,
-          spacingBetweenStaveLines: lineSpace,
-        });
+        accList.push({ y, line: accLine, shift: shiftL, acc, lineSpace });
       } else {
-        accidentalLinePositionsAndSpaceNeeds.push({
-          line: props.line,
-          extraXSpaceNeeded: extraXSpaceNeededForLeftDisplacedNotehead,
-          acc,
-        });
+        accList.push({ line: props.line, shift: shiftL, acc });
       }
     }
 
     // Sort accidentals by line number.
-    accidentalLinePositionsAndSpaceNeeds.sort((a, b) => b.line - a.line);
+    accList.sort((a, b) => b.line - a.line);
 
-    const staveLineAccidentalLayoutMetrics: StaveLineAccidentalLayoutMetrics[] = [];
+    // FIXME: Confusing name. Each object in this array has a property called `line`.
+    // So if this is a list of lines, you end up with: `line.line` which is very awkward.
+    const lineList: Line[] = [];
 
     // amount by which all accidentals must be shifted right or left for
     // stem flipping, notehead shifting concerns.
-    let maxExtraXSpaceNeeded = 0;
+    let accShift = 0;
+    let previousLine = undefined;
 
-    // Create an array of unique line numbers (staveLineAccidentalLayoutMetrics)
-    // from accidentalLinePositionsAndSpaceNeeds
-    for (let i = 0; i < accidentalLinePositionsAndSpaceNeeds.length; i++) {
-      const accidentalLinePositionAndSpaceNeeds = accidentalLinePositionsAndSpaceNeeds[i];
+    // Create an array of unique line numbers (lineList) from accList
+    for (let i = 0; i < accList.length; i++) {
+      const acc = accList[i];
 
-      const priorLineMetric = staveLineAccidentalLayoutMetrics[staveLineAccidentalLayoutMetrics.length - 1];
-      let currentLineMetric: StaveLineAccidentalLayoutMetrics;
-
-      // if this is the first line, or a new line, add a staveLineAccidentalLayoutMetric
-      if (!priorLineMetric || priorLineMetric?.line !== accidentalLinePositionAndSpaceNeeds.line) {
-        currentLineMetric = {
-          line: accidentalLinePositionAndSpaceNeeds.line,
+      // if this is the first line, or a new line, add a lineList
+      if (previousLine === undefined || previousLine !== acc.line) {
+        lineList.push({
+          line: acc.line,
           flatLine: true,
           dblSharpLine: true,
           numAcc: 0,
           width: 0,
           column: 0,
-        };
-        staveLineAccidentalLayoutMetrics.push(currentLineMetric);
-      } else {
-        currentLineMetric = priorLineMetric;
+        });
       }
-
       // if this accidental is not a flat, the accidental needs 3.0 lines lower
       // clearance instead of 2.5 lines for b or bb.
-      if (
-        accidentalLinePositionAndSpaceNeeds.acc.type !== 'b' &&
-        accidentalLinePositionAndSpaceNeeds.acc.type !== 'bb'
-      ) {
-        currentLineMetric.flatLine = false;
+      // FIXME: Naming could use work. acc.acc is very awkward
+      if (acc.acc.type !== 'b' && acc.acc.type !== 'bb') {
+        lineList[lineList.length - 1].flatLine = false;
       }
 
       // if this accidental is not a double sharp, the accidental needs 3.0 lines above
-      if (accidentalLinePositionAndSpaceNeeds.acc.type !== '##') {
-        currentLineMetric.dblSharpLine = false;
+      if (acc.acc.type !== '##') {
+        lineList[lineList.length - 1].dblSharpLine = false;
       }
 
       // Track how many accidentals are on this line:
-      currentLineMetric.numAcc++;
+      lineList[lineList.length - 1].numAcc++;
 
       // Track the total xOffset needed for this line which will be needed
       // for formatting lines w/ multiple accidentals:
 
       // width = accidental width + universal spacing between accidentals
-      currentLineMetric.width += accidentalLinePositionAndSpaceNeeds.acc.getWidth() + accidentalSpacing;
+      lineList[lineList.length - 1].width += acc.acc.getWidth() + spacing;
 
-      // if this extraXSpaceNeeded is the largest so far, use it as the starting point for
-      // all accidental columns.
-      maxExtraXSpaceNeeded = Math.max(accidentalLinePositionAndSpaceNeeds.extraXSpaceNeeded, maxExtraXSpaceNeeded);
+      // if this accShift is larger, use it to keep first column accidentals in the same line
+      accShift = acc.shift > accShift ? acc.shift : accShift;
+
+      previousLine = acc.line;
     }
 
     // ### Place Accidentals in Columns
@@ -220,19 +172,14 @@ export class Accidental extends Modifier {
     let totalColumns = 0;
 
     // establish the boundaries for a group of notes with clashing accidentals:
-    for (let i = 0; i < staveLineAccidentalLayoutMetrics.length; i++) {
+    for (let i = 0; i < lineList.length; i++) {
       let noFurtherConflicts = false;
       const groupStart = i;
       let groupEnd = i;
 
-      while (groupEnd + 1 < staveLineAccidentalLayoutMetrics.length && !noFurtherConflicts) {
+      while (groupEnd + 1 < lineList.length && !noFurtherConflicts) {
         // if this note conflicts with the next:
-        if (
-          this.checkCollision(
-            staveLineAccidentalLayoutMetrics[groupEnd],
-            staveLineAccidentalLayoutMetrics[groupEnd + 1]
-          )
-        ) {
+        if (this.checkCollision(lineList[groupEnd], lineList[groupEnd + 1])) {
           // include the next note in the group:
           groupEnd++;
         } else {
@@ -241,7 +188,7 @@ export class Accidental extends Modifier {
       }
 
       // Gets an a line from the `lineList`, relative to the current group
-      const getGroupLine = (index: number) => staveLineAccidentalLayoutMetrics[groupStart + index];
+      const getGroupLine = (index: number) => lineList[groupStart + index];
       const getGroupLines = (indexes: number[]) => indexes.map(getGroupLine);
       const lineDifference = (indexA: number, indexB: number) => {
         const [a, b] = getGroupLines([indexA, indexB]).map((item) => item.line);
@@ -255,12 +202,7 @@ export class Accidental extends Modifier {
       const groupLength = groupEnd - groupStart + 1;
 
       // Set the accidental column for each line of the group
-      let endCase = this.checkCollision(
-        staveLineAccidentalLayoutMetrics[groupStart],
-        staveLineAccidentalLayoutMetrics[groupEnd]
-      )
-        ? 'a'
-        : 'b';
+      let endCase = this.checkCollision(lineList[groupStart], lineList[groupEnd]) ? 'a' : 'b';
 
       switch (groupLength) {
         case 3:
@@ -303,13 +245,8 @@ export class Accidental extends Modifier {
         let collisionDetected = true;
         while (collisionDetected === true) {
           collisionDetected = false;
-          for (let line = 0; line + patternLength < staveLineAccidentalLayoutMetrics.length; line++) {
-            if (
-              this.checkCollision(
-                staveLineAccidentalLayoutMetrics[line],
-                staveLineAccidentalLayoutMetrics[line + patternLength]
-              )
-            ) {
+          for (let line = 0; line + patternLength < lineList.length; line++) {
+            if (this.checkCollision(lineList[line], lineList[line + patternLength])) {
               collisionDetected = true;
               patternLength++;
               break;
@@ -319,7 +256,7 @@ export class Accidental extends Modifier {
         // Then, assign a column to each line of accidentals
         for (groupMember = i; groupMember <= groupEnd; groupMember++) {
           column = ((groupMember - i) % patternLength) + 1;
-          staveLineAccidentalLayoutMetrics[groupMember].column = column;
+          lineList[groupMember].column = column;
           totalColumns = totalColumns > column ? totalColumns : column;
         }
       } else {
@@ -327,7 +264,7 @@ export class Accidental extends Modifier {
         // the Tables.accidentalColumnsTable (See: tables.ts).
         for (groupMember = i; groupMember <= groupEnd; groupMember++) {
           column = Tables.accidentalColumnsTable[groupLength][endCase][groupMember - i];
-          staveLineAccidentalLayoutMetrics[groupMember].column = column;
+          lineList[groupMember].column = column;
           totalColumns = totalColumns > column ? totalColumns : column;
         }
       }
@@ -357,12 +294,12 @@ export class Accidental extends Modifier {
       columnXOffsets[i] = 0;
     }
 
-    columnWidths[0] = leftShift + maxExtraXSpaceNeeded;
-    columnXOffsets[0] = leftShift;
+    columnWidths[0] = accShift + leftShift;
+    columnXOffsets[0] = accShift + leftShift;
 
     // Fill columnWidths with widest needed x-space;
     // this is what keeps the columns parallel.
-    staveLineAccidentalLayoutMetrics.forEach((line) => {
+    lineList.forEach((line) => {
       if (line.width > columnWidths[line.column]) columnWidths[line.column] = line.width;
     });
 
@@ -374,25 +311,26 @@ export class Accidental extends Modifier {
     const totalShift = columnXOffsets[columnXOffsets.length - 1];
     // Set the xShift for each accidental according to column offsets:
     let accCount = 0;
-    staveLineAccidentalLayoutMetrics.forEach((line) => {
+    lineList.forEach((line) => {
       let lineWidth = 0;
       const lastAccOnLine = accCount + line.numAcc;
       // handle all of the accidentals on a given line:
       for (accCount; accCount < lastAccOnLine; accCount++) {
-        const xShift = columnXOffsets[line.column - 1] + lineWidth + maxExtraXSpaceNeeded;
-        accidentalLinePositionsAndSpaceNeeds[accCount].acc.setXShift(xShift);
+        const xShift = columnXOffsets[line.column - 1] + lineWidth;
+        accList[accCount].acc.setXShift(xShift);
         // keep track of the width of accidentals we've added so far, so that when
         // we loop, we add space for them.
-        lineWidth += accidentalLinePositionsAndSpaceNeeds[accCount].acc.getWidth() + accidentalSpacing;
+        lineWidth += accList[accCount].acc.getWidth() + spacing;
         L('Line, accCount, shift: ', line.line, accCount, xShift);
       }
     });
+
     // update the overall layout with the full width of the accidental shapes:
-    state.leftShift = totalShift + additionalPadding;
+    state.leftShift += totalShift + leftPadding;
   }
 
   /** Helper function to determine whether two lines of accidentals collide vertically */
-  static checkCollision(line1: StaveLineAccidentalLayoutMetrics, line2: StaveLineAccidentalLayoutMetrics): boolean {
+  static checkCollision(line1: Line, line2: Line): boolean {
     let clearance = line2.line - line1.line;
     let clearanceRequired = 3;
     // But less clearance is required for certain accidentals: b, bb and ##.
@@ -406,7 +344,7 @@ export class Accidental extends Modifier {
       if (line2.dblSharpLine) clearance -= 0.5;
     }
     const collision = Math.abs(clearance) < clearanceRequired;
-    L('Line1, Line2, Collision: ', line1.line, line2.line, collision);
+    L('Line_1, Line_2, Collision: ', line1.line, line2.line, collision);
     return collision;
   }
 
@@ -529,15 +467,6 @@ export class Accidental extends Modifier {
     this.type = type;
     this.position = Modifier.Position.LEFT;
 
-    this.renderOptions = {
-      // Font size for glyphs
-      fontScale: Tables.NOTATION_FONT_SCALE,
-
-      // Padding between accidental and parentheses on each side
-      parenLeftPadding: 2,
-      parenRightPadding: 2,
-    };
-
     this.accidental = Tables.accidentalCodes(this.type);
     defined(this.accidental, 'ArgumentError', `Unknown accidental type: ${type}`);
 
@@ -548,32 +477,17 @@ export class Accidental extends Modifier {
   }
 
   protected reset(): void {
-    const fontScale = this.renderOptions.fontScale;
-    this.glyph = new Glyph(this.accidental.code, fontScale);
-    this.glyph.setOriginX(1.0);
+    this.text = '';
 
-    if (this.cautionary) {
-      this.parenLeft = new Glyph(Tables.accidentalCodes('{').code, fontScale);
-      this.parenRight = new Glyph(Tables.accidentalCodes('}').code, fontScale);
-      this.parenLeft.setOriginX(1.0);
-      this.parenRight.setOriginX(1.0);
-    }
-  }
-
-  /** Get width in pixels. */
-  getWidth(): number {
-    if (this.cautionary) {
-      const parenLeft = defined(this.parenLeft);
-      const parenRight = defined(this.parenRight);
-      const parenWidth =
-        parenLeft.getMetrics().width +
-        parenRight.getMetrics().width +
-        this.renderOptions.parenLeftPadding +
-        this.renderOptions.parenRightPadding;
-      return this.glyph.getMetrics().width + parenWidth;
+    if (!this.cautionary) {
+      this.text += this.accidental;
     } else {
-      return this.glyph.getMetrics().width;
+      this.text += Tables.accidentalCodes('{');
+      this.text += this.accidental;
+      this.text += Tables.accidentalCodes('}');
     }
+    this.measureText();
+    this.width = this.boundingBox?.getW() ?? 0;
   }
 
   /** Attach this accidental to `note`, which must be a `StaveNote`. */
@@ -584,7 +498,7 @@ export class Accidental extends Modifier {
 
     // Accidentals attached to grace notes are rendered smaller.
     if (isGraceNote(note)) {
-      this.renderOptions.fontScale = 25;
+      this.textFont.size = 25;
       this.reset();
     }
     return this;
@@ -593,23 +507,14 @@ export class Accidental extends Modifier {
   /** If called, draws parenthesis around accidental. */
   setAsCautionary(): this {
     this.cautionary = true;
-    this.renderOptions.fontScale = 28;
+    this.textFont.size = Tables.lookupMetric('Accidental.cautionary.fontSize');
     this.reset();
     return this;
   }
 
   /** Render accidental onto canvas. */
   draw(): void {
-    const {
-      type,
-      position,
-      index,
-      cautionary,
-      xShift,
-      yShift,
-      glyph,
-      renderOptions: { parenLeftPadding, parenRightPadding },
-    } = this;
+    const { type, position, index } = this;
 
     const ctx = this.checkContext();
     const note = this.checkAttachedNote();
@@ -617,25 +522,9 @@ export class Accidental extends Modifier {
 
     // Figure out the start `x` and `y` coordinates for note and index.
     const start = note.getModifierStartXY(position, index);
-    let accX = start.x + xShift;
-    const accY = start.y + yShift;
+    const accX = start.x;
+    const accY = start.y;
     L('Rendering: ', type, accX, accY);
-
-    if (!cautionary) {
-      glyph.render(ctx, accX, accY);
-    } else {
-      const parenLeft = defined(this.parenLeft);
-      const parenRight = defined(this.parenRight);
-
-      // Render the accidental in parentheses.
-      parenRight.render(ctx, accX, accY);
-      accX -= parenRight.getMetrics().width;
-      accX -= parenRightPadding;
-      accX -= this.accidental.parenRightPaddingAdjustment;
-      glyph.render(ctx, accX, accY);
-      accX -= glyph.getMetrics().width;
-      accX -= parenLeftPadding;
-      parenLeft.render(ctx, accX, accY);
-    }
+    this.renderText(ctx, accX - this.width, accY);
   }
 }

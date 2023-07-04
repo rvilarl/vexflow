@@ -3,7 +3,6 @@
 // MIT License
 
 import { Builder } from './easyscore';
-import { Glyph } from './glyph';
 import { Modifier } from './modifier';
 import { ModifierContextState } from './modifiercontext';
 import { Note } from './note';
@@ -12,12 +11,12 @@ import { Stem } from './stem';
 import { StemmableNote } from './stemmablenote';
 import { Tables } from './tables';
 import { Category, isGraceNote, isStaveNote, isStemmableNote, isTabNote } from './typeguard';
-import { defined, log, RuntimeError } from './util';
+import { log, RuntimeError } from './util';
 
 export interface ArticulationStruct {
-  code?: string;
-  aboveCode?: string;
-  belowCode?: string;
+  code?: number;
+  aboveCode?: number;
+  belowCode?: number;
   betweenLines: boolean;
 }
 
@@ -161,7 +160,7 @@ function getInitialOffset(note: Note, position: number): number {
  * attached to notes. The complete list of articulations is available in
  * `tables.ts` under `Vex.Flow.articulationCodes`.
  *
- * See `tests/articulation_tests.ts` for usage examples.
+ * See `tests/articulationTests.ts` for usage examples.
  */
 export class Articulation extends Modifier {
   /** To enable logging for this class. Set `Vex.Flow.Articulation.DEBUG` to `true`. */
@@ -177,12 +176,11 @@ export class Articulation extends Modifier {
   /** Articulation code provided to the constructor. */
   readonly type: string;
 
-  public renderOptions: { fontScale: number };
   // articulation defined calling reset in constructor
   protected articulation!: ArticulationStruct;
-  // glyph defined calling reset in constructor
-  protected glyph!: Glyph;
 
+  protected heightShift = 0;
+  protected height = 0;
   /**
    * FIXME:
    * Most of the complex formatting logic (ie: snapping to space) is
@@ -208,14 +206,11 @@ export class Articulation extends Modifier {
     let maxGlyphWidth = 0;
 
     const getIncrement = (articulation: Articulation, line: number, position: number) =>
-      roundToNearestHalf(
-        getRoundingFunction(line, position),
-        defined(articulation.glyph.getMetrics().height) / 10 + margin
-      );
+      roundToNearestHalf(getRoundingFunction(line, position), articulation.height / 10 + margin);
 
     articulations.forEach((articulation) => {
       const note = articulation.checkAttachedNote();
-      maxGlyphWidth = Math.max(note.getGlyphProps().getWidth(), maxGlyphWidth);
+      maxGlyphWidth = Math.max(note.getGlyphWidth(), maxGlyphWidth);
       let lines = 5;
       const stemDirection = note.hasStem() ? note.getStemDirection() : Stem.UP;
       let stemHeight = 0;
@@ -298,17 +293,15 @@ export class Articulation extends Modifier {
    * @param type entry in `Vex.Flow.articulationCodes` in `tables.ts` or Glyph code.
    *
    * Notes (by default):
-   * - Glyph codes ending with 'Above' will be positioned ABOVE
-   * - Glyph codes ending with 'Below' will be positioned BELOW
+   * - Glyph codes ending with even code will be positioned ABOVE
+   * - Glyph codes ending with odd code will be positioned BELOW
    */
   constructor(type: string) {
     super();
 
     this.type = type;
-    this.position = ABOVE;
-    this.renderOptions = {
-      fontScale: Tables.NOTATION_FONT_SCALE,
-    };
+    if (parseInt(this.type, 16) % 2 == 0) this.position = ABOVE;
+    else this.position = BELOW;
 
     this.reset();
   }
@@ -317,16 +310,18 @@ export class Articulation extends Modifier {
     this.articulation = Tables.articulationCodes(this.type);
     // Use type as glyph code, if not defined as articulation code
     if (!this.articulation) {
-      this.articulation = { code: this.type, betweenLines: false };
-      if (this.type.endsWith('Above')) this.position = ABOVE;
-      if (this.type.endsWith('Below')) this.position = BELOW;
+      this.articulation = { code: parseInt(this.type, 16), betweenLines: false };
     }
     const code =
-      (this.position === ABOVE ? this.articulation.aboveCode : this.articulation.belowCode) || this.articulation.code;
-    this.glyph = new Glyph(code ?? '', this.renderOptions.fontScale);
-    defined(this.glyph, 'ArgumentError', `Articulation not found: ${this.type}`);
-
-    this.setWidth(defined(this.glyph.getMetrics().width));
+      (this.position === ABOVE ? this.articulation.aboveCode : this.articulation.belowCode) ||
+      this.articulation.code ||
+      0x0000;
+    this.text = String.fromCharCode(code);
+    this.measureText();
+    this.width = this.textMetrics.width;
+    this.height = this.textMetrics.actualBoundingBoxDescent + this.textMetrics.actualBoundingBoxAscent;
+    // There is no below variant of pluckedLeftHandPizzicato
+    this.heightShift = this.position === BELOW && code == 0xe633 ? 1 : 0;
   }
 
   /** Set if articulation should be rendered between lines. */
@@ -342,7 +337,7 @@ export class Articulation extends Modifier {
     this.setRendered();
 
     const index = this.checkIndex();
-    const { position, glyph, textLine: textLine } = this;
+    const { position, textLine: textLine } = this;
     const canSitBetweenLines = this.articulation.betweenLines;
 
     const stave = note.checkStave();
@@ -355,17 +350,13 @@ export class Articulation extends Modifier {
 
     const initialOffset = getInitialOffset(note, position);
 
-    const padding = Tables.currentMusicFont().lookupMetric(`articulation.${glyph.getCode()}.padding`, 0);
-
     let y = (
       {
         [ABOVE]: () => {
-          glyph.setOrigin(0.5, 1);
           const y = getTopY(note, textLine) - (textLine + initialOffset) * staffSpace;
           return shouldSitOutsideStaff ? Math.min(stave.getYForTopText(Articulation.INITIAL_OFFSET), y) : y;
         },
         [BELOW]: () => {
-          glyph.setOrigin(0.5, 0);
           const y = getBottomY(note, textLine) + (textLine + initialOffset) * staffSpace;
           return shouldSitOutsideStaff ? Math.max(stave.getYForBottomText(Articulation.INITIAL_OFFSET), y) : y;
         },
@@ -379,13 +370,11 @@ export class Articulation extends Modifier {
       const articLine = distanceFromNote + Number(noteLine);
       const snappedLine = snapLineToStaff(canSitBetweenLines, articLine, position, offsetDirection);
 
-      if (isWithinLines(snappedLine, position)) glyph.setOrigin(0.5, 0.5);
-
-      y += Math.abs(snappedLine - articLine) * staffSpace * offsetDirection + padding * offsetDirection;
+      y += Math.abs(snappedLine - articLine) * staffSpace * offsetDirection;
     }
 
     L(`Rendering articulation at (x: ${x}, y: ${y})`);
 
-    glyph.render(ctx, x, y);
+    this.renderText(ctx, x - this.width / 2, y + this.height * this.heightShift);
   }
 }

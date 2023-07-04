@@ -72,7 +72,6 @@ export class Beam extends Element {
   private readonly stemDirection: number;
   private readonly ticks: number;
 
-  private yShift: number = 0;
   private breakOnIndices: number[];
   private beamCount: number;
   private unbeamable?: boolean;

@@ -1,8 +1,8 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // MIT License
 //
-// @author Joshua Koo / @zz85
-// @author @incompleteopus
+// Author: Joshua Koo / @zz85
+// Author: @incompleteopus
 
 import { Category } from './typeguard';
 import { RuntimeError } from './util';
@@ -14,9 +14,9 @@ export class Fraction {
   }
 
   // Cached objects for comparisons.
-  private static __staticFractionA = new Fraction();
-  private static __staticFractionB = new Fraction();
-  private static __staticFractionTmp = new Fraction();
+  private static _StaticFractionA = new Fraction();
+  private static _StaticFractionB = new Fraction();
+  private static _StaticFractionTmp = new Fraction();
 
   /**
    * GCD: Greatest common divisor using the Euclidean algorithm.
@@ -128,22 +128,22 @@ export class Fraction {
 
   /** Simplify both sides and check if they are equal. */
   equals(compare: Fraction | number): boolean {
-    const a = Fraction.__staticFractionA.copy(compare).simplify();
-    const b = Fraction.__staticFractionB.copy(this).simplify();
+    const a = Fraction._StaticFractionA.copy(compare).simplify();
+    const b = Fraction._StaticFractionB.copy(this).simplify();
 
     return a.numerator === b.numerator && a.denominator === b.denominator;
   }
 
   /** Greater than operator. */
   greaterThan(compare: Fraction | number): boolean {
-    const a = Fraction.__staticFractionB.copy(this);
+    const a = Fraction._StaticFractionB.copy(this);
     a.subtract(compare);
     return a.numerator > 0;
   }
 
   /** Greater than or equals operator. */
   greaterThanEquals(compare: Fraction | number): boolean {
-    const a = Fraction.__staticFractionB.copy(this);
+    const a = Fraction._StaticFractionB.copy(this);
     a.subtract(compare);
     return a.numerator >= 0;
   }
@@ -196,14 +196,14 @@ export class Fraction {
 
   /** Return a simplified string respresentation. */
   toSimplifiedString(): string {
-    return Fraction.__staticFractionTmp.copy(this).simplify().toString();
+    return Fraction._StaticFractionTmp.copy(this).simplify().toString();
   }
 
   /** Return string representation in mixed form. */
   toMixedString(): string {
     let s = '';
     const q = this.quotient();
-    const f = Fraction.__staticFractionTmp.copy(this);
+    const f = Fraction._StaticFractionTmp.copy(this);
 
     if (q < 0) {
       f.makeAbs();

@@ -67,9 +67,9 @@ function withReleaseAndDepressedPedal(style: string) {
 }
 
 const simple1 = createTest(withSimplePedal('text'));
-const simple2 = createTest(withSimplePedal('bracket'));
+const simple2 = createTest(withSimplePedal('E002' /*bracket*/));
 const simple3 = createTest(withSimplePedal('mixed'));
-const releaseDepress1 = createTest(withReleaseAndDepressedPedal('bracket'));
+const releaseDepress1 = createTest(withReleaseAndDepressedPedal('E002' /*bracket*/));
 const releaseDepress2 = createTest(withReleaseAndDepressedPedal('mixed'));
 
 const customTest1 = createTest((factory, notes0, notes1) => {

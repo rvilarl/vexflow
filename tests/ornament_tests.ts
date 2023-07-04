@@ -11,9 +11,9 @@ import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 import { Accidental } from '../src/accidental';
 import { Beam } from '../src/beam';
 import { Dot } from '../src/dot';
+import { Element } from '../src/element';
 import { Factory } from '../src/factory';
 import { Formatter } from '../src/formatter';
-import { Glyph } from '../src/glyph';
 import { Ornament } from '../src/ornament';
 import { ContextBuilder } from '../src/renderer';
 import { Stave } from '../src/stave';
@@ -25,6 +25,7 @@ const OrnamentTests = {
     QUnit.module('Ornament');
     const run = VexFlowTests.runTests;
     run('Ornaments', drawOrnaments);
+    run('Ornaments2', drawOrnaments2);
     run('Ornaments Vertically Shifted', drawOrnamentsDisplaced);
     run('Ornaments - Delayed turns', drawOrnamentsDelayed);
     run('Ornaments - Delayed turns, Multiple Draws', drawOrnamentsDelayedMultipleDraws);
@@ -33,6 +34,48 @@ const OrnamentTests = {
     run('Jazz Ornaments', jazzOrnaments);
   },
 };
+
+function drawOrnaments2(options: TestOptions, contextBuilder: ContextBuilder): void {
+  options.assert.expect(0);
+
+  // Get the rendering context
+  const ctx = contextBuilder(options.elementId, 750, 195);
+
+  const stave = new Stave(10, 30, 700);
+  stave.setContext(ctx).draw();
+  const notes = [
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+    new StaveNote({ keys: ['f/4'], duration: '4', stemDirection: 1 }),
+  ];
+
+  notes[0].addModifier(new Ornament('scoop'), 0);
+  notes[1].addModifier(new Ornament('doit'), 0);
+  notes[2].addModifier(new Ornament('fall'), 0);
+  notes[3].addModifier(new Ornament('doitLong'), 0);
+  notes[4].addModifier(new Ornament('fallLong'), 0);
+  notes[5].addModifier(new Ornament('bend'), 0);
+  notes[6].addModifier(new Ornament('plungerClosed'), 0);
+  notes[7].addModifier(new Ornament('plungerOpen'), 0);
+  notes[8].addModifier(new Ornament('flip'), 0);
+  notes[9].addModifier(new Ornament('jazzTurn'), 0);
+  notes[10].addModifier(new Ornament('jazzTurn'), 0);
+  notes[11].addModifier(new Ornament('smear'), 0);
+  notes[12].addModifier(new Ornament('smear'), 0);
+
+  // Helper function to justify and draw a 4/4 voice
+  Formatter.FormatAndDraw(ctx, stave, notes);
+}
 
 function drawOrnaments(options: TestOptions, contextBuilder: ContextBuilder): void {
   options.assert.expect(0);
@@ -237,7 +280,10 @@ function drawOrnamentsWithAccidentals(options: TestOptions): void {
 }
 
 function jazzOrnaments(options: TestOptions): void {
-  const clefWidth = Glyph.getWidth('gClef', 38); // widest clef
+  const el = new Element();
+  el.setText(String.fromCharCode(0xe050));
+  el.measureText();
+  const clefWidth = el.getWidth(); // widest clef
 
   // Helper function.
   function draw(modifiers: Ornament[], keys: string[], x: number, width: number, y: number, stemDirection?: number) {

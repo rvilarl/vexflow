@@ -7,11 +7,11 @@ import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
 import { Dot } from '../src/dot';
 import { Flow } from '../src/flow';
-import { Font, FontWeight } from '../src/font';
 import { Formatter } from '../src/formatter';
 import { RenderContext } from '../src/rendercontext';
 import { ContextBuilder } from '../src/renderer';
 import { Stave } from '../src/stave';
+import { Tables } from '../src/tables';
 import { TabNote, TabNoteStruct } from '../src/tabnote';
 import { TabStave } from '../src/tabstave';
 import { TickContext } from '../src/tickcontext';
@@ -94,7 +94,7 @@ function tickContext(assert: Assert): void {
 
   const tickContext = new TickContext().addTickable(note).preFormat().setX(10).setPadding(0);
 
-  assert.equal(tickContext.getWidth(), 7);
+  assert.equal(tickContext.getWidth(), 6);
 }
 
 function draw(options: TestOptions, contextBuilder: ContextBuilder): void {
@@ -384,7 +384,7 @@ function drawStemsUpThrough(options: TestOptions, contextBuilder: ContextBuilder
     return tabNote;
   });
 
-  ctx.setFont(Font.SANS_SERIF, 10, FontWeight.BOLD);
+  ctx.setFont(Tables.lookupMetric('fontFamily'), 10, 'bold');
   const voice = new Voice(Flow.TIME4_4).setMode(VoiceMode.SOFT);
   voice.addTickables(notes);
   new Formatter().joinVoices([voice]).formatToStave([voice], stave);

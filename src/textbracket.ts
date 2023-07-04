@@ -6,7 +6,7 @@
 // using this class.
 
 import { Element } from './element';
-import { Font, FontInfo, FontStyle, FontWeight } from './font';
+import { Font } from './font';
 import { Note } from './note';
 import { RenderContext } from './rendercontext';
 import { Renderer } from './renderer';
@@ -40,13 +40,6 @@ export class TextBracket extends Element {
     return Category.TextBracket;
   }
 
-  static TEXT_FONT: Required<FontInfo> = {
-    family: Font.SERIF,
-    size: 15,
-    weight: FontWeight.NORMAL,
-    style: FontStyle.ITALIC,
-  };
-
   public renderOptions: {
     dashed: boolean;
     color: string;
@@ -77,22 +70,6 @@ export class TextBracket extends Element {
     };
   }
 
-  /**
-   * @deprecated Use `TextBracket.Position` instead.
-   */
-  static get Positions(): typeof TextBracketPosition {
-    L('Positions is deprecated, use TextBracketPosition instead.');
-    return TextBracketPosition;
-  }
-
-  /**
-   * @deprecated Use `TextBracket.PositionString` instead.
-   */
-  static get PositionsString(): Record<string, number> {
-    L('PositionsString is deprecated, use PositionString instead.');
-    return TextBracket.PositionString;
-  }
-
   constructor({ start, stop, text = '', superscript = '', position = TextBracketPosition.TOP }: TextBracketParams) {
     super();
 
@@ -105,8 +82,6 @@ export class TextBracket extends Element {
     this.position = typeof position === 'string' ? TextBracket.PositionString[position] : position;
 
     this.line = 1;
-
-    this.resetFont();
 
     this.renderOptions = {
       dashed: true,
@@ -206,7 +181,7 @@ export class TextBracket extends Element {
     // Setup initial coordinates for the bracket line
     let startX = start.x;
     let lineY = superY;
-    const endX = stop.x + this.stop.getGlyphProps().getWidth();
+    const endX = stop.x + this.stop.getGlyphWidth();
 
     // Adjust x and y coordinates based on position
     if (this.position === TextBracketPosition.TOP) {

@@ -11,15 +11,14 @@ import {
   AnnotationVerticalJustify,
   Beam,
   Dot,
-  Font,
-  FontStyle,
-  FontWeight,
   StaveNoteStruct,
   Stem,
   StemmableNote,
   TabNoteStruct,
   Voice,
 } from '../src/index';
+
+import { Tables } from '../src/tables';
 
 const BeamTests = {
   Start(): void {
@@ -771,10 +770,10 @@ function complexWithAnnotation(options: TestOptions): void {
   ];
 
   const font = {
-    family: Font.SERIF,
+    family: Tables.lookupMetric('fontFamily'),
     size: 14,
-    weight: FontWeight.BOLD,
-    style: FontStyle.ITALIC,
+    weight: 'bold',
+    style: 'italic',
   };
 
   const notes1 = s1.map((struct) =>

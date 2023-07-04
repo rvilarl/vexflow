@@ -1,7 +1,6 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // MIT License
 
-import { Glyph } from './glyph';
 import { Note } from './note';
 import { Tables } from './tables';
 import { TextNoteStruct } from './textnote';
@@ -31,35 +30,16 @@ export class TextDynamics extends Note {
   protected sequence: string;
 
   protected line: number;
-  protected glyphs: Glyph[];
 
   /** The glyph data for each dynamics letter. */
-  static get GLYPHS(): Record<string, { code: string; width: number }> {
+  static get GLYPHS(): Record<string, string> {
     return {
-      f: {
-        code: 'dynamicForte',
-        width: 12,
-      },
-      p: {
-        code: 'dynamicPiano',
-        width: 14,
-      },
-      m: {
-        code: 'dynamicMezzo',
-        width: 17,
-      },
-      s: {
-        code: 'dynamicSforzando',
-        width: 10,
-      },
-      z: {
-        code: 'dynamicZ',
-        width: 12,
-      },
-      r: {
-        code: 'dynamicRinforzando',
-        width: 12,
-      },
+      f: 'E522' /*dynamicForte*/,
+      p: 'E520' /*dynamicPiano*/,
+      m: 'E521' /*dynamicMezzo*/,
+      s: 'E524' /*dynamicSforzando*/,
+      z: 'E525' /*dynamicZ*/,
+      r: 'E523' /*dynamicRinforzando*/,
     };
   }
 
@@ -77,10 +57,10 @@ export class TextDynamics extends Note {
 
     this.sequence = (noteStruct.text || '').toLowerCase();
     this.line = noteStruct.line || 0;
-    this.glyphs = [];
+    this.text = '';
 
-    this.renderOptions = { ...this.renderOptions, glyphFontSize: Tables.NOTATION_FONT_SCALE };
-
+    this.renderOptions = { glyphFontSize: Tables.lookupMetric('fontSize'), ...this.renderOptions };
+    this.textFont.size = defined(this.renderOptions.glyphFontSize) * this.renderOptions.glyphFontScale;
     L('New Dynamics Text: ', this.sequence);
   }
 
@@ -92,28 +72,23 @@ export class TextDynamics extends Note {
 
   /** Preformat the dynamics text. */
   preFormat(): this {
-    let totalWidth = 0;
     // length of this.glyphs must be <=
     // length of this.sequence, so if we're formatted before
     // create new glyphs.
-    this.glyphs = [];
+    this.text = '';
     // Iterate through each letter
     this.sequence.split('').forEach((letter) => {
       // Get the glyph data for the letter
-      const glyphData = TextDynamics.GLYPHS[letter];
-      if (!glyphData) throw new RuntimeError('Invalid dynamics character: ' + letter);
-
-      const size = defined(this.renderOptions.glyphFontSize);
-      const glyph = new Glyph(glyphData.code, size, { category: 'textNote' });
+      const glyph = TextDynamics.GLYPHS[letter];
+      if (!glyph) throw new RuntimeError('Invalid dynamics character: ' + letter);
 
       // Add the glyph
-      this.glyphs.push(glyph);
+      this.text += String.fromCharCode(parseInt(glyph, 16));
 
-      totalWidth += glyphData.width;
     });
 
     // Store the width of the text
-    this.setWidth(totalWidth);
+    this.measureText();
     this.preFormatted = true;
     return this;
   }
@@ -126,11 +101,6 @@ export class TextDynamics extends Note {
 
     L('Rendering Dynamics: ', this.sequence);
 
-    let letterX = x;
-    this.glyphs.forEach((glyph, index) => {
-      const currentLetter = this.sequence[index];
-      glyph.render(this.checkContext(), letterX, y);
-      letterX += TextDynamics.GLYPHS[currentLetter].width;
-    });
+    this.renderText(this.checkContext(), x, y);
   }
 }

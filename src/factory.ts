@@ -1,6 +1,7 @@
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // MIT License
 // @author Mohit Cheppudira
+// MIT License
 
 import { Accidental } from './accidental';
 import { Annotation, AnnotationHorizontalJustify, AnnotationVerticalJustify } from './annotation';
@@ -16,7 +17,6 @@ import { FontInfo } from './font';
 import { Formatter, FormatterOptions } from './formatter';
 import { FretHandFinger } from './frethandfinger';
 import { GhostNote } from './ghostnote';
-import { Glyph } from './glyph';
 import { GlyphNote, GlyphNoteOptions } from './glyphnote';
 import { GraceNote, GraceNoteStruct } from './gracenote';
 import { GraceNoteGroup } from './gracenotegroup';
@@ -63,7 +63,6 @@ export interface FactoryOptions {
     height: number;
     background?: string;
   };
-  font?: FontInfo;
 }
 
 // eslint-disable-next-line
@@ -77,9 +76,6 @@ function L(...args: any[]) {
 export class Factory {
   /** To enable logging for this class. Set `Vex.Flow.Factory.DEBUG` to `true`. */
   static DEBUG: boolean = false;
-
-  /** Default text font. */
-  static TEXT_FONT: Required<FontInfo> = { ...Element.TEXT_FONT };
 
   /**
    * Static simplified function to access constructor without providing FactoryOptions
@@ -122,7 +118,6 @@ export class Factory {
         height: 200,
         background: '#FFF',
       },
-      font: Factory.TEXT_FONT,
     };
 
     this.setOptions(options);
@@ -231,7 +226,7 @@ export class Factory {
     return note;
   }
 
-  GlyphNote(glyph: Glyph, noteStruct: NoteStruct, options?: GlyphNoteOptions): GlyphNote {
+  GlyphNote(glyph: string, noteStruct: NoteStruct, options?: GlyphNoteOptions): GlyphNote {
     const note = new GlyphNote(glyph, noteStruct, options);
     if (this.stave) note.setStave(this.stave);
     note.setContext(this.context);
@@ -360,8 +355,6 @@ export class Factory {
   ChordSymbol(params?: {
     vJustify?: string;
     hJustify?: string;
-    kerning?: boolean;
-    reportWidth?: boolean;
     fontFamily?: string;
     fontSize?: number;
     fontWeight?: string;
@@ -369,16 +362,12 @@ export class Factory {
     const p = {
       vJustify: 'top',
       hJustify: 'center',
-      kerning: true,
-      reportWidth: true,
       ...params,
     };
 
     const chordSymbol = new ChordSymbol();
     chordSymbol.setHorizontal(p.hJustify);
     chordSymbol.setVertical(p.vJustify);
-    chordSymbol.setEnableKerning(p.kerning);
-    chordSymbol.setReportWidth(p.reportWidth);
     // There is a default font based on the engraving font.  Only set then
     // font if it is specific, else use the default
     if (typeof p.fontFamily === 'string' && typeof p.fontSize === 'number') {
@@ -406,12 +395,11 @@ export class Factory {
   ) {
     const options = {
       type,
-      position: 0,
       accidental: '',
       ...params,
     };
     const ornament = new Ornament(type);
-    ornament.setPosition(options.position);
+    if (options.position) ornament.setPosition(options.position);
     if (options.upperAccidental) {
       ornament.setUpperAccidental(options.upperAccidental);
     }
@@ -594,7 +582,7 @@ export class Factory {
     from: Note | null;
     to: Note | null;
     options: {
-      harsh?: boolean;
+      code?: number;
       line?: number;
     };
   }): VibratoBracket {
@@ -604,7 +592,7 @@ export class Factory {
     });
 
     if (params.options.line) vibratoBracket.setLine(params.options.line);
-    if (params.options.harsh) vibratoBracket.setHarsh(params.options.harsh);
+    if (params.options.code) vibratoBracket.setVibratoCode(params.options.code);
 
     vibratoBracket.setContext(this.context);
     this.renderQ.push(vibratoBracket);

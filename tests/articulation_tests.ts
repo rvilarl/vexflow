@@ -8,7 +8,6 @@ import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 import { Articulation } from '../src/articulation';
 import { Beam } from '../src/beam';
 import { Flow } from '../src/flow';
-import { Font } from '../src/font';
 import { Formatter } from '../src/formatter';
 import { ModifierPosition } from '../src/modifier';
 import { ContextBuilder } from '../src/renderer';
@@ -16,6 +15,7 @@ import { Stave } from '../src/stave';
 import { Barline } from '../src/stavebarline';
 import { StaveNote, StaveNoteStruct } from '../src/stavenote';
 import { Stem } from '../src/stem';
+import { Tables } from '../src/tables';
 import { TabNote } from '../src/tabnote';
 import { TabStave } from '../src/tabstave';
 import { Voice } from '../src/voice';
@@ -250,53 +250,53 @@ function verticalPlacement2(options: TestOptions, contextBuilder: ContextBuilder
 
   const notes = [
     staveNote({ keys: ['f/4'], duration: 'q' })
-      .addModifier(new Articulation('fermataBelow'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW), 0)
-      .addModifier(new Articulation('articTenutoBelow'), 0),
+      .addModifier(new Articulation('E4C1' /*fermataBelow*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/), 0),
     staveNote({ keys: ['g/4'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('fermataShortBelow'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW), 0)
-      .addModifier(new Articulation('articTenutoBelow'), 0),
+      .addModifier(new Articulation('E4C5' /*fermataShortBelow*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/), 0),
     staveNote({ keys: ['c/5'], duration: 'q' })
-      .addModifier(new Articulation('fermataLongBelow'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW), 0)
-      .addModifier(new Articulation('articTenutoBelow'), 0),
+      .addModifier(new Articulation('E4C7' /*fermataLongBelow*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/), 0),
     staveNote({ keys: ['f/4'], duration: 'q' })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW), 0)
-      .addModifier(new Articulation('articTenutoBelow'), 0)
-      .addModifier(new Articulation('fermataVeryShortBelow'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/), 0)
+      .addModifier(new Articulation('E4C3' /*fermataVeryShortBelow*/), 0),
     staveNote({ keys: ['g/4'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW), 0)
-      .addModifier(new Articulation('articTenutoBelow'), 0)
-      .addModifier(new Articulation('fermataVeryLongBelow'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/), 0)
+      .addModifier(new Articulation('E4C9' /*fermataVeryLongBelow*/), 0),
     staveNote({ keys: ['c/5'], duration: 'q' })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.BELOW).setBetweenLines(), 0)
-      .addModifier(new Articulation('articTenutoBelow').setBetweenLines(), 0)
-      .addModifier(new Articulation('fermataBelow'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.BELOW).setBetweenLines(), 0)
+      .addModifier(new Articulation('E4A5' /*articTenutoBelow*/).setBetweenLines(), 0)
+      .addModifier(new Articulation('E4C1' /*fermataBelow*/), 0),
     staveNote({ keys: ['a/5'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('fermataAbove'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE), 0)
-      .addModifier(new Articulation('articTenutoAbove'), 0),
+      .addModifier(new Articulation('E4C0' /*fermataAbove*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/), 0),
     staveNote({ keys: ['f/5'], duration: 'q' })
-      .addModifier(new Articulation('fermataShortAbove'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE), 0)
-      .addModifier(new Articulation('articTenutoAbove'), 0),
+      .addModifier(new Articulation('E4C4' /*fermataShortAbove*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/), 0),
     staveNote({ keys: ['b/4'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('fermataLongAbove'), 0)
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE), 0)
-      .addModifier(new Articulation('articTenutoAbove'), 0),
+      .addModifier(new Articulation('E4C6' /*fermataLongAbove*/), 0)
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/), 0),
     staveNote({ keys: ['a/5'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE), 0)
-      .addModifier(new Articulation('articTenutoAbove'), 0)
-      .addModifier(new Articulation('fermataVeryShortAbove'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/), 0)
+      .addModifier(new Articulation('E4C2' /*fermataVeryShortAbove*/), 0),
     staveNote({ keys: ['f/5'], duration: 'q' })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE), 0)
-      .addModifier(new Articulation('articTenutoAbove'), 0)
-      .addModifier(new Articulation('fermataVeryLongAbove'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/), 0)
+      .addModifier(new Articulation('E4C8' /*fermataVeryLongAbove*/), 0),
     staveNote({ keys: ['b/4'], duration: 'q', stemDirection: Stem.DOWN })
-      .addModifier(new Articulation('augmentationDot').setPosition(ModifierPosition.ABOVE).setBetweenLines(), 0)
-      .addModifier(new Articulation('articTenutoAbove').setBetweenLines(), 0)
-      .addModifier(new Articulation('fermataAbove'), 0),
+      .addModifier(new Articulation('E1E7' /*augmentationDot*/).setPosition(ModifierPosition.ABOVE).setBetweenLines(), 0)
+      .addModifier(new Articulation('E4A4' /*articTenutoAbove*/).setBetweenLines(), 0)
+      .addModifier(new Articulation('E4C0' /*fermataAbove*/), 0),
   ];
 
   Formatter.FormatAndDraw(ctx, stave, notes);
@@ -413,7 +413,7 @@ function drawArticulations2(options: TestOptions): void {
 
 function tabNotes(options: TestOptions, contextBuilder: ContextBuilder): void {
   const ctx = contextBuilder(options.elementId, 600, 200);
-  ctx.font = '10pt ' + Font.SANS_SERIF;
+  ctx.font = '10pt ' + Tables.lookupMetric('fontFamily');
   const stave = new TabStave(10, 10, 550);
   stave.setContext(ctx);
   stave.draw();

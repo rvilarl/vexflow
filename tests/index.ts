@@ -10,7 +10,7 @@
 //   VexFlowTests.register(AnnotationTests);
 //   export { AnnotationTests };
 //
-// In vexflowTestHelpers.ts: VexFlowTests.run() will run all registered tests.
+// In vexflow_test_helpers.ts: VexFlowTests.run() will run all registered tests.
 //
 // To iterate faster during development, you can comment out most of this file
 // and focus on just testing the module(s) you are currently working on.
@@ -70,7 +70,6 @@ export * from './tabslide_tests';
 export * from './tabstave_tests';
 export * from './tabtie_tests';
 export * from './textbracket_tests';
-export * from './textformatter_tests';
 export * from './textnote_tests';
 export * from './threevoice_tests';
 export * from './tickcontext_tests';

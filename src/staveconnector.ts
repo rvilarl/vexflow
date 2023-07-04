@@ -2,8 +2,6 @@
 // MIT License
 
 import { Element } from './element';
-import { Font, FontInfo, FontStyle, FontWeight } from './font';
-import { Glyph } from './glyph';
 import { RenderContext } from './rendercontext';
 import { Stave } from './stave';
 import { Tables } from './tables';
@@ -60,13 +58,6 @@ export class StaveConnector extends Element {
     return Category.StaveConnector;
   }
 
-  static TEXT_FONT: Required<FontInfo> = {
-    family: Font.SERIF,
-    size: 16,
-    weight: FontWeight.NORMAL,
-    style: FontStyle.NORMAL,
-  };
-
   /**
    * SINGLE_LEFT and SINGLE are the same value for compatibility
    * with older versions of vexflow which didn't have right sided
@@ -117,7 +108,7 @@ export class StaveConnector extends Element {
     options: { shiftX: number; shiftY: number };
   }[];
 
-  protected type: (typeof StaveConnector)['type'][keyof (typeof StaveConnector)['type']];
+  protected type: typeof StaveConnector['type'][keyof typeof StaveConnector['type']];
 
   readonly topStave: Stave;
   readonly bottomStave: Stave;
@@ -133,7 +124,6 @@ export class StaveConnector extends Element {
     this.topStave = topStave;
     this.bottomStave = bottomStave;
     this.type = StaveConnector.type.DOUBLE;
-    this.resetFont();
 
     // 1. Offset Bold Double Left to align with offset Repeat Begin bars
     // 2. Offset BRACE type not to overlap with another StaveConnector
@@ -210,6 +200,7 @@ export class StaveConnector extends Element {
     }
 
     let attachmentHeight = botY - topY;
+    const el = new Element();
     switch (this.type) {
       case StaveConnector.type.SINGLE:
         width = 1;
@@ -264,8 +255,10 @@ export class StaveConnector extends Element {
         topY -= 6;
         botY += 6;
         attachmentHeight = botY - topY;
-        Glyph.renderGlyph(ctx, topX - 5, topY, 40, 'bracketTop');
-        Glyph.renderGlyph(ctx, topX - 5, botY, 40, 'bracketBottom');
+        el.setText(String.fromCharCode(0xe003)); //bracketTop
+        el.renderText(ctx, topX - 5, topY);
+        el.setText(String.fromCharCode(0xe004)); //bracketBottom
+        el.renderText(ctx, topX - 5, botY);
         topX -= this.width + 2;
         break;
       case StaveConnector.type.BOLD_DOUBLE_LEFT:

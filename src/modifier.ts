@@ -58,11 +58,8 @@ export class Modifier extends Element {
   protected note?: Note;
   protected index?: number;
 
-  protected width: number;
   protected textLine: number;
   protected position: ModifierPosition;
-  protected yShift: number;
-  protected xShift: number;
 
   private spacingFromNextModifier: number;
   private modifierContext?: ModifierContext;
@@ -83,17 +80,6 @@ export class Modifier extends Element {
   /** Called when position changes. */
   protected reset(): void {
     // DO NOTHING.
-  }
-
-  /** Get modifier widths. */
-  getWidth(): number {
-    return this.width;
-  }
-
-  /** Set modifier widths. */
-  setWidth(width: number): this {
-    this.width = width;
-    return this;
   }
 
   /** Get attached note (`StaveNote`, `TabNote`, etc.) */

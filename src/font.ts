@@ -1,10 +1,6 @@
-import { ChordSymbolMetrics } from './chordsymbol';
-import { ClefMetrics } from './clef';
-import { NoteHeadMetrics } from './notehead';
-import { OrnamentMetrics } from './ornament';
-import { StringNumberMetrics } from './stringnumber';
-import { TupletMetrics } from './tuplet';
-import { defined } from './util';
+import { TextMeasure } from './rendercontext';
+import { Tables } from './tables';
+import { RuntimeError } from './util';
 
 export interface FontInfo {
   /** CSS font-family, e.g., 'Arial', 'Helvetica Neue, Arial, sans-serif', 'Times, serif' */
@@ -23,86 +19,15 @@ export interface FontInfo {
   style?: string;
 }
 
-export type FontModule = { data: FontData; metrics: FontMetrics };
-
-export interface FontData {
-  glyphs: Record<string, FontGlyph>;
-  fontFamily?: string;
-  resolution: number;
-  generatedOn?: string;
-}
-
-/** Specified in the `xxx_metrics.ts` files. */
-// eslint-disable-next-line
-export interface FontMetrics extends Record<string, any> {
-  smufl: boolean;
-  stave?: Record<string, number>;
-  accidental?: Record<string, number>;
-  clefDefault?: ClefMetrics;
-  clefSmall?: ClefMetrics;
-  pedalMarking?: Record<string, Record<string, number>>;
-  digits?: Record<string, number>;
-  articulation?: Record<string, Record<string, number>>;
-  tremolo?: Record<string, Record<string, number>>;
-  chordSymbol?: ChordSymbolMetrics;
-  ornament?: Record<string, OrnamentMetrics>;
-  noteHead?: NoteHeadMetrics;
-  stringNumber?: StringNumberMetrics;
-  tuplet?: TupletMetrics;
-  glyphs: Record<
-    string,
-    {
-      point?: number;
-      shiftX?: number;
-      shiftY?: number;
-      scale?: number;
-      [key: string]: { point?: number; shiftX?: number; shiftY?: number; scale?: number } | number | undefined;
-    }
-  >;
-}
-
-export interface FontGlyph {
-  xMin: number;
-  xMax: number;
-  yMin?: number;
-  yMax?: number;
-  ha: number;
-  leftSideBearing?: number;
-  advanceWidth?: number;
-
-  // The o (outline) field is optional, because robotoslab_glyphs.ts & petalumascript_glyphs.ts
-  // do not include glyph outlines. We rely on *.woff files to provide the glyph outlines.
-  o?: string;
-  cachedOutline?: number[];
-}
-
-export enum FontWeight {
-  NORMAL = 'normal',
-  BOLD = 'bold',
-}
-
-export enum FontStyle {
-  NORMAL = 'normal',
-  ITALIC = 'italic',
-}
-
 // Internal <span></span> element for parsing CSS font shorthand strings.
 let fontParser: HTMLSpanElement;
-
-const Fonts: Record<string, Font> = {};
 
 export class Font {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // STATIC MEMBERS
 
-  /** Default sans-serif font family. */
-  static SANS_SERIF: string = 'Arial, sans-serif';
-
-  /** Default serif font family. */
-  static SERIF: string = 'Times New Roman, serif';
-
-  /** Default font size in `pt`. */
-  static SIZE: number = 10;
+  /** Canvas used to measure text */
+  protected static txtCanvas?: HTMLCanvasElement;
 
   // CSS Font Sizes: 36pt == 48px == 3em == 300% == 0.5in
   /** Given a length (for units: pt, px, em, %, in, mm, cm) what is the scale factor to convert it to px? */
@@ -122,7 +47,7 @@ export class Font {
    * units (e.g., pt, em, %).
    * @returns the number of pixels that is equivalent to `fontSize`
    */
-  static convertSizeToPixelValue(fontSize: string | number = Font.SIZE): number {
+  static convertSizeToPixelValue(fontSize: string | number = Tables.TEXT_FONT_SCALE): number {
     if (typeof fontSize === 'number') {
       // Assume the numeric fontSize is specified in pt.
       return fontSize * Font.scaleToPxFrom.pt;
@@ -143,7 +68,7 @@ export class Font {
    * units (e.g., pt, em, %).
    * @returns the number of points that is equivalent to `fontSize`
    */
-  static convertSizeToPointValue(fontSize: string | number = Font.SIZE): number {
+  static convertSizeToPointValue(fontSize: string | number = Tables.TEXT_FONT_SCALE): number {
     if (typeof fontSize === 'number') {
       // Assume the numeric fontSize is specified in pt.
       return fontSize;
@@ -189,16 +114,16 @@ export class Font {
       family = f;
     }
 
-    family = family ?? Font.SANS_SERIF;
-    size = size ?? Font.SIZE + 'pt';
-    weight = weight ?? FontWeight.NORMAL;
-    style = style ?? FontStyle.NORMAL;
+    family = family ?? '';
+    size = size ?? Tables.TEXT_FONT_SCALE;
+    weight = weight ?? 'normal';
+    style = style ?? 'normal';
 
     if (weight === '') {
-      weight = FontWeight.NORMAL;
+      weight = 'normal';
     }
     if (style === '') {
-      style = FontStyle.NORMAL;
+      style = 'normal';
     }
 
     // If size is a number, we assume the unit is `pt`.
@@ -240,7 +165,7 @@ export class Font {
 
     let style: string;
     const st = fontInfo.style;
-    if (st === FontStyle.NORMAL || st === '' || st === undefined) {
+    if (st === 'normal' || st === '' || st === undefined) {
       style = ''; // no space! Omit the style section.
     } else {
       style = st.trim() + ' ';
@@ -248,10 +173,10 @@ export class Font {
 
     let weight: string;
     const wt = fontInfo.weight;
-    if (wt === FontWeight.NORMAL || wt === '' || wt === undefined) {
+    if (wt === 'normal' || wt === '' || wt === undefined) {
       weight = ''; // no space! Omit the weight section.
     } else if (typeof wt === 'number') {
-      weight = wt + ' ';
+      weight = wt + 'pt ';
     } else {
       weight = wt.trim() + ' ';
     }
@@ -259,15 +184,15 @@ export class Font {
     let size: string;
     const sz = fontInfo.size;
     if (sz === undefined) {
-      size = Font.SIZE + 'pt ';
+      size = Tables.TEXT_FONT_SCALE + ' ';
     } else if (typeof sz === 'number') {
-      size = sz + 'pt ';
+      size = sz + ' ';
     } else {
       // size is already a string.
       size = sz.trim() + ' ';
     }
 
-    const family: string = fontInfo.family ?? Font.SANS_SERIF;
+    const family: string = fontInfo.family ?? '';
 
     return `${style}${weight}${size}${family}`;
   }
@@ -317,7 +242,7 @@ export class Font {
     if (!style) {
       return false;
     } else {
-      return style.toLowerCase() === FontStyle.ITALIC;
+      return style.toLowerCase() === 'italic';
     }
   }
 
@@ -326,7 +251,7 @@ export class Font {
    * Alternative: https://cdn.jsdelivr.net/npm/vexflow-fonts@1.0.3/
    * Or you can use your own host.
    */
-  static WEB_FONT_HOST = 'https://unpkg.com/vexflow-fonts@1.0.3/';
+  static WEB_FONT_HOST = 'https://unpkg.com/vexflow-fonts@1.0.5/';
 
   /**
    * These font files will be loaded from the CDN specified by `Font.WEB_FONT_HOST` when
@@ -334,8 +259,26 @@ export class Font {
    * set of fonts to load. See: `Font.loadWebFonts()`.
    */
   static WEB_FONT_FILES: Record<string /* fontName */, string /* fontPath */> = {
-    'Roboto Slab': 'robotoslab/RobotoSlab-Medium_2.001.woff',
-    PetalumaScript: 'petaluma/PetalumaScript_1.10_FS.woff',
+   /* Bravura: 'bravura/Bravura_1.392.woff2',
+    BravuraText: 'bravura/BravuraText_1.393.woff2',
+    Gonville: 'gonvillesmufl/GonvilleSmufl_1.100.woff2',
+    Gootville: 'gootville/Gootville_1.3.woff2',
+    GootvilleText: 'gootville/GootvilleText_1.2.woff2',
+    Leland: 'leland/Leland_0.75.woff2',
+    LelandText: 'leland/LelandText_0.75.woff2',
+    Petaluma: 'petaluma/Petaluma_1.065.woff2',
+    PetalumaScript: 'petaluma/PetalumaScript_1.10_FS.woff2',
+    MuseJazz: 'musejazz/MuseJazz_1.0.woff2',
+    MuseJazzText: 'musejazz/MuseJazzText_1.0.woff2',
+    'Roboto Slab': 'robotoslab/RobotoSlab-Medium_2.001.woff2',
+    FinaleAsh: 'finale/FinaleAsh_1.7.woff2',
+    FinaleAshText: 'finale/FinaleAshText_1.3.woff2',
+    FinaleJazz: 'finale/FinaleJazz_1.9.woff2',
+    FinaleJazzText: 'finale/FinaleJazzText_1.3.woff2',
+    FinaleBroadway: 'finale/FinaleBroadway_1.4.woff2',
+    FinaleBroadwayText: 'finale/FinaleBroadwayText_1.1.woff2',
+    FinaleMaestro: 'finale/FinaleMaestro_2.7.woff2',
+    FinaleMaestroText: 'finale/FinaleMaestroText-Regular_1.6.woff2',*/
   };
 
   /**
@@ -347,13 +290,8 @@ export class Font {
   // Support distributions of the typescript compiler that do not yet include the FontFace API declarations.
   // eslint-disable-next-line
   // @ts-ignore
-  static async loadWebFont(fontName: string, woffURL: string, includeWoff2: boolean = true): Promise<FontFace> {
-    const woff2URL = includeWoff2 ? `url(${woffURL}2) format('woff2'), ` : '';
-    const woff1URL = `url(${woffURL}) format('woff')`;
-    const woffURLs = woff2URL + woff1URL;
-    // eslint-disable-next-line
-    // @ts-ignore
-    const fontFace = new FontFace(fontName, woffURLs);
+  static async loadWebFont(fontName: string, woffURL: string): Promise<FontFace> {
+    const fontFace = new FontFace(fontName, `url(${woffURL})`);
     await fontFace.load();
     // eslint-disable-next-line
     // @ts-ignore
@@ -381,106 +319,46 @@ export class Font {
     }
   }
 
-  /**
-   * @param fontName
-   * @param data optionally set the Font object's `.data` property.
-   *   This is usually done when setting up a font for the first time.
-   * @param metrics optionally set the Font object's `.metrics` property.
-   *   This is usually done when setting up a font for the first time.
-   * @returns a Font object with the given `fontName`.
-   *   Reuse an existing Font object if a matching one is found.
-   */
-  static load(fontName: string, data?: FontData, metrics?: FontMetrics): Font {
-    let font = Fonts[fontName];
-    if (!font) {
-      font = new Font(fontName);
-      Fonts[fontName] = font;
+  static textMetrics(text: string, fontInfo?: FontInfo): TextMetrics {
+    if (!fontInfo) throw new RuntimeError('Font', 'No font info');
+    let txtCanvas = this.txtCanvas;
+    if (!txtCanvas) {
+      // Create the SVG text element that will be used to measure text in the event
+      // of a cache miss.
+      txtCanvas = document.createElement('canvas');
+      this.txtCanvas = txtCanvas;
     }
-    if (data) {
-      font.setData(data);
+    const context = txtCanvas.getContext('2d');
+    if (!context) throw new RuntimeError('Font', 'No txt context');
+    context.font = Font.toCSSString(Font.validate(fontInfo));
+    return context.measureText(text);
+  }
+
+  /** Return the text bounding box */
+  static measureText(text: string, fontInfo?: FontInfo): TextMeasure {
+    if (!fontInfo) throw new RuntimeError('Font', 'No font info');
+    let txtCanvas = this.txtCanvas;
+    if (!txtCanvas) {
+      // Create the SVG text element that will be used to measure text in the event
+      // of a cache miss.
+      txtCanvas = document.createElement('canvas');
+      this.txtCanvas = txtCanvas;
     }
-    if (metrics) {
-      font.setMetrics(metrics);
-    }
-    return font;
-  }
+    const context = txtCanvas.getContext('2d');
+    if (!context) throw new RuntimeError('Font', 'No txt context');
+    context.font = Font.toCSSString(Font.validate(fontInfo));
+    const metrics = context.measureText(text);
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // INSTANCE MEMBERS
-
-  protected name: string;
-  protected data?: FontData;
-  protected metrics?: FontMetrics;
-
-  /**
-   * Use `Font.load(fontName)` to get a Font object.
-   * Do not call this constructor directly.
-   */
-  private constructor(fontName: string) {
-    this.name = fontName;
-  }
-
-  getName(): string {
-    return this.name;
-  }
-
-  getData(): FontData {
-    return defined(this.data, 'FontError', 'Missing font data');
-  }
-
-  getMetrics(): FontMetrics {
-    return defined(this.metrics, 'FontError', 'Missing metrics');
-  }
-
-  setData(data: FontData): void {
-    this.data = data;
-  }
-
-  setMetrics(metrics: FontMetrics): void {
-    this.metrics = metrics;
-  }
-
-  hasData(): boolean {
-    return this.data !== undefined;
-  }
-
-  getResolution(): number {
-    return this.getData().resolution;
-  }
-
-  getGlyphs(): Record<string, FontGlyph> {
-    return this.getData().glyphs;
-  }
-
-  /**
-   * Use the provided key to look up a value in this font's metrics file (e.g., bravura_metrics.ts, petaluma_metrics.ts).
-   * @param key is a string separated by periods (e.g., stave.endPaddingMax, clef.lineCount.'5'.shiftY).
-   * @param defaultValue is returned if the lookup fails.
-   * @returns the retrieved value (or `defaultValue` if the lookup fails).
-   */
-  // eslint-disable-next-line
-  lookupMetric(key: string, defaultValue?: Record<string, any> | number): any {
-    const keyParts = key.split('.');
-
-    // Start with the top level font metrics object, and keep looking deeper into the object (via each part of the period-delimited key).
-    let currObj = this.getMetrics();
-    for (let i = 0; i < keyParts.length; i++) {
-      const keyPart = keyParts[i];
-      const value = currObj[keyPart];
-      if (value === undefined) {
-        // If the key lookup fails, we fall back to the defaultValue.
-        return defaultValue;
-      }
-      // The most recent lookup succeeded, so we drill deeper into the object.
-      currObj = value;
-    }
-
-    // After checking every part of the key (i.e., the loop completed), return the most recently retrieved value.
-    return currObj;
-  }
-
-  /** For debugging. */
-  toString(): string {
-    return '[' + this.name + ' Font]';
+    let y = 0;
+    let height = 0;
+    y = -metrics.actualBoundingBoxAscent;
+    height = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+    // Return x, y, width & height in the same manner as svg getBBox
+    return {
+      x: 0,
+      y: y,
+      width: metrics.width,
+      height: height,
+    };
   }
 }

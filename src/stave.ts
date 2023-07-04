@@ -4,7 +4,6 @@
 import { BoundingBox, Bounds } from './boundingbox';
 import { Clef } from './clef';
 import { Element, ElementStyle } from './element';
-import { Font, FontInfo, FontStyle, FontWeight } from './font';
 import { KeySignature } from './keysignature';
 import { Barline, BarlineType } from './stavebarline';
 import { StaveModifier, StaveModifierPosition } from './stavemodifier';
@@ -58,13 +57,6 @@ export class Stave extends Element {
     return Category.Stave;
   }
 
-  static TEXT_FONT: Required<FontInfo> = {
-    family: Font.SANS_SERIF,
-    size: 8,
-    weight: FontWeight.NORMAL,
-    style: FontStyle.NORMAL,
-  };
-
   readonly options: Required<StaveOptions>;
 
   protected startX: number;
@@ -88,14 +80,12 @@ export class Stave extends Element {
   // This is the sum of the padding that normally goes on left + right of a stave during
   // drawing. Used to size staves correctly with content width.
   static get defaultPadding(): number {
-    const musicFont = Tables.currentMusicFont();
-    return musicFont.lookupMetric('stave.padding') + musicFont.lookupMetric('stave.endPaddingMax');
+    return Tables.lookupMetric('stave.padding') + Tables.lookupMetric('stave.endPaddingMax');
   }
 
   // Right padding, used by system if startX is already determined.
   static get rightPadding(): number {
-    const musicFont = Tables.currentMusicFont();
-    return musicFont.lookupMetric('stave.endPaddingMax');
+    return Tables.lookupMetric('stave.endPaddingMax');
   }
 
   constructor(x: number, y: number, width: number, options?: StaveOptions) {
@@ -111,7 +101,6 @@ export class Stave extends Element {
     this.measure = 0;
     this.clef = 'treble';
     this.endClef = undefined;
-    this.resetFont();
 
     this.options = {
       verticalBarWidth: 10, // Width around vertical bar end-marker
@@ -328,7 +317,7 @@ export class Stave extends Element {
   }
 
   // Text functions
-  setText(
+  setStaveText(
     text: string,
     position: number,
     options: {
@@ -582,12 +571,6 @@ export class Stave extends Element {
 
   addEndTimeSignature(timeSpec: string, customPadding?: number): this {
     this.addTimeSignature(timeSpec, customPadding, StaveModifierPosition.END);
-    return this;
-  }
-
-  // Deprecated
-  addTrebleGlyph(): this {
-    this.addClef('treble');
     return this;
   }
 

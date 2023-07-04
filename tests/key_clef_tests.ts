@@ -6,7 +6,7 @@
 
 import { MAJOR_KEYS, MINOR_KEYS, TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
-import { Glyph } from '../src/glyph';
+import { Element } from '../src/element';
 import { KeySignature } from '../src/keysignature';
 import { ContextBuilder } from '../src/renderer';
 import { Stave } from '../src/stave';
@@ -14,7 +14,7 @@ import { Stave } from '../src/stave';
 const ClefKeySignatureTests = {
   Start(): void {
     QUnit.module('Clef Keys');
-    // Removed an identical 'Key Parser Test'. See keysignature_tests.ts.
+    // Removed an identical 'Key Parser Test'. See keysignatureTests.ts.
     const run = VexFlowTests.runTests;
     run('Major Key Clef Test', keys, { majorKeys: true });
     run('Minor Key Clef Test', keys, { majorKeys: false });
@@ -22,13 +22,19 @@ const ClefKeySignatureTests = {
   },
 };
 
+function getWidth(code: number) {
+  const el = new Element();
+  el.setText(String.fromCharCode(code));
+  el.measureText();
+  return el.getWidth();
+}
+
 const fontWidths = () => {
-  const glyphScale = 39; // default font scale
-  const sharpWidth = Glyph.getWidth('accidentalSharp', glyphScale) + 1;
-  const flatWidth = Glyph.getWidth('accidentalFlat', glyphScale) + 1;
+  const sharpWidth = getWidth(0xe262 /*accidentalSharp*/) + 1;
+  const flatWidth = getWidth(0xe260 /*accidentalFlat*/) + 1;
   const ksPadding = 10; // hard-coded in keysignature.ts
-  const naturalWidth = Glyph.getWidth('accidentalNatural', glyphScale) + 2;
-  const clefWidth = Glyph.getWidth('gClef', glyphScale); // widest clef
+  const naturalWidth = getWidth(0xe261 /*accidentalNatural*/) + 2;
+  const clefWidth = getWidth(0xe050 /*gClef*/);
   return { sharpWidth, flatWidth, naturalWidth, clefWidth, ksPadding };
 };
 
