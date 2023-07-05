@@ -681,15 +681,15 @@ function sagittal(options: TestOptions): void {
   f.StaveTie({
     from: notes[0],
     to: notes[1],
-    firstIndices: [0, 1],
-    lastIndices: [0, 1],
+    firstIndexes: [0, 1],
+    lastIndexes: [0, 1],
   });
 
   f.StaveTie({
     from: notes[0],
     to: notes[1],
-    firstIndices: [3],
-    lastIndices: [3],
+    firstIndexes: [3],
+    lastIndexes: [3],
     options: {
       direction: Stem.DOWN,
     },
@@ -698,15 +698,15 @@ function sagittal(options: TestOptions): void {
   f.StaveTie({
     from: notes[4],
     to: notes[5],
-    firstIndices: [0, 1],
-    lastIndices: [0, 1],
+    firstIndexes: [0, 1],
+    lastIndexes: [0, 1],
   });
 
   f.StaveTie({
     from: notes[4],
     to: notes[5],
-    firstIndices: [3],
-    lastIndices: [3],
+    firstIndexes: [3],
+    lastIndexes: [3],
     options: {
       direction: Stem.DOWN,
     },

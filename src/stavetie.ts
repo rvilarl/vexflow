@@ -15,8 +15,8 @@ import { RuntimeError } from './util';
 export interface TieNotes {
   firstNote?: Note | null;
   lastNote?: Note | null;
-  firstIndices?: number[];
-  lastIndices?: number[];
+  firstIndexes?: number[];
+  lastIndexes?: number[];
 }
 
 export class StaveTie extends Element {
@@ -50,8 +50,8 @@ export class StaveTie extends Element {
    *  {
    *    firstNote: Note,
    *    lastNote: Note,
-   *    firstIndices: [n1, n2, n3],
-   *    lastIndices: [n1, n2, n3]
+   *    firstIndexes: [n1, n2, n3],
+   *    lastIndexes: [n1, n2, n3]
    *  }
    *
    * @param text
@@ -88,15 +88,15 @@ export class StaveTie extends Element {
       throw new RuntimeError('BadArguments', 'Tie needs to have either firstNote or lastNote set.');
     }
 
-    if (!notes.firstIndices) {
-      notes.firstIndices = [0];
+    if (!notes.firstIndexes) {
+      notes.firstIndexes = [0];
     }
-    if (!notes.lastIndices) {
-      notes.lastIndices = [0];
+    if (!notes.lastIndexes) {
+      notes.lastIndexes = [0];
     }
 
-    if (notes.firstIndices.length !== notes.lastIndices.length) {
-      throw new RuntimeError('BadArguments', 'Tied notes must have same number of indices.');
+    if (notes.firstIndexes.length !== notes.lastIndexes.length) {
+      throw new RuntimeError('BadArguments', 'Tied notes must have same number of indexes.');
     }
 
     this.notes = notes;
@@ -134,21 +134,21 @@ export class StaveTie extends Element {
     const lastXShift = this.renderOptions.lastXShift;
     const yShift = this.renderOptions.yShift * params.direction;
 
-    // setNotes(...) verified that firstIndices and lastIndices are not undefined.
+    // setNotes(...) verified that firstIndexes and lastIndexes are not undefined.
     // As a result, we use the ! non-null assertion operator here.
     // eslint-disable-next-line
-    const firstIndices = this.notes.firstIndices!;
+    const firstIndexes = this.notes.firstIndexes!;
     // eslint-disable-next-line
-    const lastIndices = this.notes.lastIndices!;
+    const lastIndexes = this.notes.lastIndexes!;
     this.applyStyle();
     ctx.openGroup('stavetie', this.getAttribute('id'));
-    for (let i = 0; i < firstIndices.length; ++i) {
+    for (let i = 0; i < firstIndexes.length; ++i) {
       const cpX = (params.lastXPx + lastXShift + (params.firstXPx + firstXShift)) / 2;
-      const firstYPx = params.firstYs[firstIndices[i]] + yShift;
-      const lastYPx = params.lastYs[lastIndices[i]] + yShift;
+      const firstYPx = params.firstYs[firstIndexes[i]] + yShift;
+      const lastYPx = params.lastYs[lastIndexes[i]] + yShift;
 
       if (isNaN(firstYPx) || isNaN(lastYPx)) {
-        throw new RuntimeError('BadArguments', 'Bad indices for tie rendering.');
+        throw new RuntimeError('BadArguments', 'Bad indexes for tie rendering.');
       }
 
       const topCpY = (firstYPx + lastYPx) / 2 + cp1 * params.direction;
@@ -207,7 +207,7 @@ export class StaveTie extends Element {
       const stave = lastNote.checkStave();
       firstXPx = stave.getTieStartX();
       firstYs = lastNote.getYs();
-      this.notes.firstIndices = this.notes.lastIndices;
+      this.notes.firstIndexes = this.notes.lastIndexes;
     }
 
     if (lastNote) {
@@ -218,7 +218,7 @@ export class StaveTie extends Element {
       const stave = firstNote.checkStave();
       lastXPx = stave.getTieEndX();
       lastYs = firstNote.getYs();
-      this.notes.lastIndices = this.notes.firstIndices;
+      this.notes.lastIndexes = this.notes.firstIndexes;
     }
 
     if (this.direction) {

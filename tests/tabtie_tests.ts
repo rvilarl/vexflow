@@ -52,7 +52,7 @@ function setupContext(options: TestOptions, w: number = 0, h: number = 0): { con
 /**
  * Helper function to create the TabTie between two Note objects.
  */
-function tieNotes(notes: Note[], indices: number[], stave: Stave, ctx: RenderContext, text?: string): void {
+function tieNotes(notes: Note[], indexes: number[], stave: Stave, ctx: RenderContext, text?: string): void {
   const voice = new Voice(Flow.TIME4_4);
   voice.addTickables(notes);
 
@@ -63,8 +63,8 @@ function tieNotes(notes: Note[], indices: number[], stave: Stave, ctx: RenderCon
     {
       firstNote: notes[0],
       lastNote: notes[1],
-      firstIndices: indices,
-      lastIndices: indices,
+      firstIndexes: indexes,
+      lastIndexes: indexes,
     },
     text ?? 'Annotation'
   );
@@ -145,8 +145,8 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   createTabTie({
     firstNote: notes[0],
     lastNote: notes[1],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
   })
     .setContext(context)
     .draw();
@@ -156,8 +156,8 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   createTabTie({
     firstNote: notes[2],
     lastNote: notes[3],
-    firstIndices: [0, 1],
-    lastIndices: [0, 1],
+    firstIndexes: [0, 1],
+    lastIndexes: [0, 1],
   })
     .setContext(context)
     .draw();
@@ -167,8 +167,8 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   createTabTie({
     firstNote: notes[4],
     lastNote: notes[5],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
   })
     .setContext(context)
     .draw();
@@ -178,8 +178,8 @@ function multiTest(options: TestOptions, createTabTie: (notes: TieNotes) => TabT
   createTabTie({
     firstNote: notes[6],
     lastNote: notes[7],
-    firstIndices: [0, 1],
-    lastIndices: [0, 1],
+    firstIndexes: [0, 1],
+    lastIndexes: [0, 1],
   })
     .setContext(context)
     .draw();
@@ -215,8 +215,8 @@ function continuous(options: TestOptions, contextBuilder: ContextBuilder): void 
   TabTie.createHammeron({
     firstNote: notes[0],
     lastNote: notes[1],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
   })
     .setContext(context)
     .draw();
@@ -224,8 +224,8 @@ function continuous(options: TestOptions, contextBuilder: ContextBuilder): void 
   TabTie.createPulloff({
     firstNote: notes[1],
     lastNote: notes[2],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
   })
     .setContext(context)
     .draw();

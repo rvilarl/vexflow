@@ -547,8 +547,8 @@ export class Factory {
   StaveTie(params: {
     from?: Note | null;
     to?: Note | null;
-    firstIndices?: number[];
-    lastIndices?: number[];
+    firstIndexes?: number[];
+    lastIndexes?: number[];
     text?: string;
     options?: { direction?: number };
   }): StaveTie {
@@ -556,8 +556,8 @@ export class Factory {
       {
         firstNote: params.from,
         lastNote: params.to,
-        firstIndices: params.firstIndices,
-        lastIndices: params.lastIndices,
+        firstIndexes: params.firstIndexes,
+        lastIndexes: params.lastIndexes,
       },
       params.text
     );
@@ -571,15 +571,15 @@ export class Factory {
   StaveLine(params: {
     from: StaveNote;
     to: StaveNote;
-    firstIndices: number[];
-    lastIndices: number[];
+    firstIndexes: number[];
+    lastIndexes: number[];
     options?: { text?: string; font?: FontInfo };
   }): StaveLine {
     const line = new StaveLine({
       firstNote: params.from,
       lastNote: params.to,
-      firstIndices: params.firstIndices,
-      lastIndices: params.lastIndices,
+      firstIndexes: params.firstIndexes,
+      lastIndexes: params.lastIndexes,
     });
 
     if (params.options?.text) line.setText(params.options.text);

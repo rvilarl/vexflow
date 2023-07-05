@@ -33,8 +33,8 @@ function simple0(options: TestOptions): void {
   f.StaveLine({
     from: notes[0],
     to: notes[1],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
     options: {
       font: { family: Font.SERIF, size: 12, style: FontStyle.ITALIC },
       text: 'gliss.',
@@ -44,8 +44,8 @@ function simple0(options: TestOptions): void {
   const staveLine2 = f.StaveLine({
     from: notes[2],
     to: notes[3],
-    firstIndices: [2, 1, 0],
-    lastIndices: [0, 1, 2],
+    firstIndexes: [2, 1, 0],
+    lastIndexes: [0, 1, 2],
   });
   staveLine2.renderOptions.lineDash = [10, 10];
 
@@ -81,39 +81,39 @@ function simple1(options: TestOptions): void {
   const staveLine0 = f.StaveLine({
     from: notes[0],
     to: notes[1],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
     options: { text: 'Left' },
   });
 
   const staveLine4 = f.StaveLine({
     from: notes[2],
     to: notes[3],
-    firstIndices: [1],
-    lastIndices: [1],
+    firstIndexes: [1],
+    lastIndexes: [1],
     options: { text: 'Right' },
   });
 
   const staveLine1 = f.StaveLine({
     from: notes[4],
     to: notes[5],
-    firstIndices: [0],
-    lastIndices: [0],
+    firstIndexes: [0],
+    lastIndexes: [0],
     options: { text: 'Center' },
   });
 
   const staveLine2 = f.StaveLine({
     from: notes[6],
     to: notes[7],
-    firstIndices: [1],
-    lastIndices: [0],
+    firstIndexes: [1],
+    lastIndexes: [0],
   });
 
   const staveLine3 = f.StaveLine({
     from: notes[6],
     to: notes[7],
-    firstIndices: [2],
-    lastIndices: [2],
+    firstIndexes: [2],
+    lastIndexes: [2],
     options: { text: 'Top' },
   });
 

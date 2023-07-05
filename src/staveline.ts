@@ -19,9 +19,9 @@ import { RuntimeError } from './util';
 
 export interface StaveLineNotes {
   firstNote: StaveNote;
-  firstIndices: number[];
+  firstIndexes: number[];
   lastNote: StaveNote;
-  lastIndices: number[];
+  lastIndexes: number[];
 }
 
 // Attribution: Arrow rendering implementations based off of
@@ -85,9 +85,9 @@ export class StaveLine extends Element {
   // These five instance variables are all initialized by the constructor via this.setNotes(notes).
   protected notes!: StaveLineNotes;
   protected firstNote!: StaveNote;
-  protected firstIndices!: number[];
+  protected firstIndexes!: number[];
   protected lastNote!: StaveNote;
-  protected lastIndices!: number[];
+  protected lastIndexes!: number[];
 
   // Initialize the StaveLine with the given `notes`.
   //
@@ -97,8 +97,8 @@ export class StaveLine extends Element {
   //  {
   //    firstNote: Note,
   //    lastNote: Note,
-  //    firstIndices: [n1, n2, n3],
-  //    lastIndices: [n1, n2, n3]
+  //    firstIndexes: [n1, n2, n3],
+  //    lastIndexes: [n1, n2, n3]
   //  }
   //  ```
   constructor(notes: StaveLineNotes) {
@@ -150,18 +150,18 @@ export class StaveLine extends Element {
       throw new RuntimeError('BadArguments', 'Notes needs to have either firstNote or lastNote set.');
     }
 
-    if (!notes.firstIndices) notes.firstIndices = [0];
-    if (!notes.lastIndices) notes.lastIndices = [0];
+    if (!notes.firstIndexes) notes.firstIndexes = [0];
+    if (!notes.lastIndexes) notes.lastIndexes = [0];
 
-    if (notes.firstIndices.length !== notes.lastIndices.length) {
-      throw new RuntimeError('BadArguments', 'Connected notes must have same number of indices.');
+    if (notes.firstIndexes.length !== notes.lastIndexes.length) {
+      throw new RuntimeError('BadArguments', 'Connected notes must have same number of indexes.');
     }
 
     this.notes = notes;
     this.firstNote = notes.firstNote;
-    this.firstIndices = notes.firstIndices;
+    this.firstIndexes = notes.firstIndexes;
     this.lastNote = notes.lastNote;
-    this.lastIndices = notes.lastIndices;
+    this.lastIndexes = notes.lastIndexes;
     return this;
   }
 
@@ -292,11 +292,11 @@ export class StaveLine extends Element {
     ctx.save();
     this.applyLineStyle();
 
-    // Cycle through each set of indices and draw lines
+    // Cycle through each set of indexes and draw lines
     let startPosition = { x: 0, y: 0 };
     let endPosition = { x: 0, y: 0 };
-    this.firstIndices.forEach((firstIndex, i) => {
-      const lastIndex = this.lastIndices[i];
+    this.firstIndexes.forEach((firstIndex, i) => {
+      const lastIndex = this.lastIndexes[i];
 
       // Get initial coordinates for the start/end of the line
       startPosition = firstNote.getModifierStartXY(2, firstIndex);

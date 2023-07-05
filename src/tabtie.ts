@@ -26,8 +26,8 @@ export class TabTie extends StaveTie {
    *  {
    *    firstNote: Note,
    *    lastNote: Note,
-   *    firstIndices: [n1, n2, n3],
-   *    lastIndices: [n1, n2, n3]
+   *    firstIndexes: [n1, n2, n3],
+   *    lastIndexes: [n1, n2, n3]
    *  }
    *
    * @param text

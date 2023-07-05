@@ -53,7 +53,7 @@ export class KeyManager {
     this.scaleMapByValue = {};
     this.originalScaleMapByValue = {};
 
-    const noteLocation = Music.rootIndices[this.keyParts.root];
+    const noteLocation = Music.rootIndexes[this.keyParts.root];
 
     for (let i = 0; i < Music.roots.length; ++i) {
       const index = (noteLocation + i) % Music.roots.length;

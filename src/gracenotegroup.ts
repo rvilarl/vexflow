@@ -182,8 +182,8 @@ export class GraceNoteGroup extends Modifier {
       this.slur = new TieClass({
         lastNote: this.graceNotes[0],
         firstNote: note,
-        firstIndices: [0],
-        lastIndices: [0],
+        firstIndexes: [0],
+        lastIndexes: [0],
       });
 
       this.slur.renderOptions.cp2 = 12;

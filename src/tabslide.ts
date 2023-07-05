@@ -44,13 +44,13 @@ export class TabSlide extends TabTie {
    *  {
    *    firstNote: Note,
    *    lastNote: Note,
-   *    firstIndices: [n1, n2, n3],
-   *    lastIndices: [n1, n2, n3]
+   *    firstIndexes: [n1, n2, n3],
+   *    lastIndexes: [n1, n2, n3]
    *  }
    * @param notes.firstNote the starting note of the slide
    * @param notes.lastNote the ending note of the slide
-   * @param notes.firstIndices specifies which string + fret positions of the TabNote are used in this slide. zero indexed.
-   * @param notes.lastIndices currently unused. we assume it's the same as firstIndices.
+   * @param notes.firstIndexes specifies which string + fret positions of the TabNote are used in this slide. zero indexed.
+   * @param notes.lastIndexes currently unused. we assume it's the same as firstIndexes.
    *
    * @param direction TabSlide.SLIDE_UP or TabSlide.SLIDE_DOWN
    */
@@ -107,12 +107,12 @@ export class TabSlide extends TabTie {
     }
 
     // eslint-disable-next-line
-    const firstIndices = this.notes.firstIndices!;
-    for (let i = 0; i < firstIndices.length; ++i) {
-      const slideY = firstYs[firstIndices[i]] + this.renderOptions.yShift;
+    const firstIndexes = this.notes.firstIndexes!;
+    for (let i = 0; i < firstIndexes.length; ++i) {
+      const slideY = firstYs[firstIndexes[i]] + this.renderOptions.yShift;
 
       if (isNaN(slideY)) {
-        throw new RuntimeError('BadArguments', 'Bad indices for slide rendering.');
+        throw new RuntimeError('BadArguments', 'Bad indexes for slide rendering.');
       }
 
       ctx.beginPath();

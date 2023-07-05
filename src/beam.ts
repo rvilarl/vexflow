@@ -72,7 +72,7 @@ export class Beam extends Element {
   private readonly ticks: number;
 
   private yShift: number = 0;
-  private breakOnIndices: number[];
+  private breakOnIndexes: number[];
   private beamCount: number;
   private unbeamable?: boolean;
 
@@ -494,7 +494,7 @@ export class Beam extends Element {
     this.postFormatted = false;
     this.notes = notes;
     this.beamCount = this.getBeamCount();
-    this.breakOnIndices = [];
+    this.breakOnIndexes = [];
     this.renderOptions = {
       beamWidth: 5,
       maxSlope: 0.25,
@@ -523,9 +523,9 @@ export class Beam extends Element {
     return maxBeamCount;
   }
 
-  /** Set which note `indices` to break the secondary beam at. */
-  breakSecondaryAt(indices: number[]): this {
-    this.breakOnIndices = indices;
+  /** Set which note `indexes` to break the secondary beam at. */
+  breakSecondaryAt(indexes: number[]): this {
+    this.breakOnIndexes = indexes;
     return this;
   }
 
@@ -804,8 +804,8 @@ export class Beam extends Element {
 
       // 8th note beams are always drawn.
       if (parseInt(duration, 10) >= 8) {
-        // First, check to see if any indices were set up through breakSecondaryAt()
-        shouldBreak = this.breakOnIndices.indexOf(i) !== -1;
+        // First, check to see if any indexes were set up through breakSecondaryAt()
+        shouldBreak = this.breakOnIndexes.indexOf(i) !== -1;
 
         // If the secondary breaks were auto-configured in the render options,
         //  handle that as well.

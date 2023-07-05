@@ -47,8 +47,8 @@ export class Music {
     return [0, 2, 4, 5, 7, 9, 11];
   }
 
-  /** Indices of the root notes.*/
-  static get rootIndices(): Record<string, RootValue> {
+  /** Indexes of the root notes.*/
+  static get rootIndexes(): Record<string, RootValue> {
     return {
       c: 0,
       d: 1,
@@ -423,7 +423,7 @@ export class Music {
     if (!scaleName) throw new RuntimeError('BadArguments', 'Unsupported key type: ' + keySignature);
 
     const scale = this.getScaleTones(this.getNoteValue(keySigString), scaleName);
-    const noteLocation = Music.rootIndices[keySigParts.root];
+    const noteLocation = Music.rootIndexes[keySigParts.root];
 
     const scaleMap = {} as Record<string, string>;
     for (let i = 0; i < Music.roots.length; ++i) {
