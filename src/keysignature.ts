@@ -106,7 +106,7 @@ export class KeySignature extends StaveModifier {
   // spacing will be included in the glyph's position
   convertToGlyph(acc: { type: string; line: number }, nextAcc: { type: string; line: number }): void {
     const accGlyphData = Tables.accidentalCodes(acc.type);
-    const glyph = new Glyph(accGlyphData.code, this.glyphFontScale);
+    const glyph = new Glyph(accGlyphData, this.glyphFontScale);
 
     // Determine spacing between current accidental and the next accidental
     let extraWidth = 1;

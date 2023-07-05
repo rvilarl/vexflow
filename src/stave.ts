@@ -328,7 +328,7 @@ export class Stave extends Element {
   }
 
   // Text functions
-  setText(
+  setStaveText(
     text: string,
     position: number,
     options: {

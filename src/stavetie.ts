@@ -37,8 +37,6 @@ export class StaveTie extends Element {
     yShift: number;
   };
 
-  protected text?: string;
-
   // notes is initialized by the constructor via this.setNotes(notes).
   protected notes!: TieNotes;
 
@@ -56,7 +54,7 @@ export class StaveTie extends Element {
    *
    * @param text
    */
-  constructor(notes: TieNotes, text?: string) {
+  constructor(notes: TieNotes, text = '') {
     super();
     this.setNotes(notes);
     this.text = text;
@@ -165,8 +163,8 @@ export class StaveTie extends Element {
     this.restoreStyle();
   }
 
-  renderText(firstXPx: number, lastXPx: number): void {
-    if (!this.text) return;
+  renderTieText(firstXPx: number, lastXPx: number): void {
+    if (this.text == '') return;
     const ctx = this.checkContext();
     let centerX = (firstXPx + lastXPx) / 2;
     centerX -= ctx.measureText(this.text).width / 2;
@@ -233,7 +231,7 @@ export class StaveTie extends Element {
       direction: stemDirection,
     });
 
-    this.renderText(firstXPx, lastXPx);
+    this.renderTieText(firstXPx, lastXPx);
     return true;
   }
 }

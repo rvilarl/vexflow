@@ -321,7 +321,7 @@ export class Flow {
   static get TIME4_4(): { numBeats: number; beatValue: number; resolution: number } {
     return Tables.TIME4_4;
   }
-  static get accidentalMap(): Record<string, { code: string; parenRightPaddingAdjustment: number }> {
+  static get accidentalMap(): Record<string, number> {
     return Tables.accidentalMap;
   }
   static get unicode(): Record<string, string> {

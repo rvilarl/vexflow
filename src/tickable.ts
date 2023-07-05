@@ -126,8 +126,9 @@ export abstract class Tickable extends Element {
   }
 
   /** Set width of note. Used by the formatter for positioning. */
-  setWidth(width: number): void {
+  setWidth(width: number): this {
     this.width = width;
+    return this;
   }
 
   /** Get width of note. Used by the formatter for positioning. */
