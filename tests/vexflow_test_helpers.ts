@@ -34,7 +34,7 @@ function restoreOriginalFontStack(): void {
 
 // A micro util inspired by jQuery.
 if (!global.$) {
-  // generatePngImages.js uses jsdom and does not include jQuery.
+  // generate_png_images.js uses jsdom and does not include jQuery.
   global.$ = (param: HTMLElement | string) => {
     let element: HTMLElement;
     if (typeof param !== 'string') {

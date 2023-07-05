@@ -58,7 +58,7 @@ function getUnusedStringGroups(numLines: number, stringsUsed: number[]) {
 // between fret positions
 //
 // Parameters:
-// * stem_Y - The `y` coordinate the stem is located on
+// * stemY - The `y` coordinate the stem is located on
 // * unusedStrings - An array of groups of unused strings
 // * stave - The stave to use for reference
 // * stemDirection - The direction of the stem

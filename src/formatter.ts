@@ -310,9 +310,9 @@ export class Formatter {
    * @param stave a `Stave` instance on which to render `Note`s.
    * @param notes array of `Note` instances for the stave (`Note`, `BarNote`, etc.)
    * @param tabnotes array of `Note` instances for the tab stave (`TabNote`, `BarNote`, etc.)
-   * @param autobeam automatically generate beams.
+   * @param autoBeam automatically generate beams.
    * @param params a configuration object:
-   *    * `autobeam` automatically generates beams for the notes.
+   *    * `autoBeam` automatically generates beams for the notes.
    *    * `alignRests` aligns rests with nearby notes.
    */
   static FormatAndDrawTab(
@@ -321,11 +321,11 @@ export class Formatter {
     stave: Stave,
     tabnotes: TabNote[],
     notes: Tickable[],
-    autobeam: boolean,
+    autoBeam: boolean,
     params: FormatParams
   ): void {
     let opts = {
-      autoBeam: autobeam,
+      autoBeam,
       alignRests: false,
     };
 

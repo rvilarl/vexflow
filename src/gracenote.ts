@@ -90,9 +90,7 @@ export class GraceNote extends StaveNote {
         const noteStemHeight = stem.getHeight();
         let x = this.getAbsoluteX();
         let y =
-          stemDirection === Stem.DOWN
-            ? noteHeadBounds.yTop - noteStemHeight
-            : noteHeadBounds.yBottom - noteStemHeight;
+          stemDirection === Stem.DOWN ? noteHeadBounds.yTop - noteStemHeight : noteHeadBounds.yBottom - noteStemHeight;
 
         const defaultStemExtention =
           stemDirection === Stem.DOWN ? this.glyphProps.stemDownExtension : this.glyphProps.stemUpExtension;

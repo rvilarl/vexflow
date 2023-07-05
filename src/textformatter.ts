@@ -142,7 +142,7 @@ export class TextFormatter {
    * Apps may register their own fonts and metrics, and those metrics
    * will be available to the app for formatting.
    *
-   * Metrics can be generated from a font file using fontgenText.js in the tools/fonts directory.
+   * Metrics can be generated from a font file using fontgen_text.js in the tools/fonts directory.
    * @param info
    * @param overwrite
    */
@@ -231,7 +231,7 @@ export class TextFormatter {
 
   /**
    * The glyphs table is indexed by the character (e.g., 'C', '@').
-   * See: robotoslabGlyphs.ts & petalumascriptGlyphs.ts.
+   * See: robotoslab_glyphs.ts & petalumascript_glyphs.ts.
    */
   getGlyphMetrics(character: string): FontGlyph {
     if (this.glyphs[character]) {
@@ -249,8 +249,8 @@ export class TextFormatter {
   /**
    * Retrieve the character's advanceWidth as a fraction of an `em` unit.
    * For the space character ' ' as defined in the:
-   *   petalumascriptGlyphs.ts: 250 advanceWidth in the 1000 unitsPerEm font returns 0.25.
-   *   robotoslabGlyphs.ts:     509 advanceWidth in the 2048 unitsPerEm font returns 0.2485.
+   *   petalumascript_glyphs.ts: 250 advanceWidth in the 1000 unitsPerEm font returns 0.25.
+   *   robotoslab_glyphs.ts:     509 advanceWidth in the 2048 unitsPerEm font returns 0.2485.
    */
   getWidthForCharacterInEm(c: string): number {
     const metrics = this.getGlyphMetrics(c);

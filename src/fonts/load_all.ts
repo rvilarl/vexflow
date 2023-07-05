@@ -9,7 +9,7 @@ import { loadGonville } from './load_gonville';
 import { loadLeland } from './load_leland';
 import { loadPetaluma } from './load_petaluma';
 // ADD_MUSIC_FONT
-// import { loadXXX } from './loadXxx';
+// import { loadXXX } from './load_xxx';
 
 // Populate our font "database" with all our music fonts.
 export function loadAllMusicFonts(): void {

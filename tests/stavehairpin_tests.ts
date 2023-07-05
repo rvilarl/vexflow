@@ -4,8 +4,6 @@
 //
 // StaveHairpin Tests
 
-// TODO: Incorrect property names in the options object: vo, leftHo, rightHo.
-
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
 import { RenderContext } from '../src/rendercontext';
@@ -83,14 +81,11 @@ const simple = createTest((ctx, notes) => {
 const horizontal = createTest((ctx, notes) => {
   drawHairpin(notes[0], notes[2], ctx, 1, 3, {
     height: 10,
-    // TODO: these three property names seem to be incorrect.
-    // vo => should it be 'yShift'?
-    // leftHo => should it be 'leftShiftPx'?
-    // rightHo => should it be 'rightShiftPx'?
-    vo: 20, // vertical offset
-    leftHo: 20, // left horizontal offset
-    rightHo: -20, // right horizontal offset
-  } as unknown as StaveHairpinRenderOptions);
+    yShift: 0, // vertical offset
+    leftShiftPx: 0, // left horizontal offset
+    rightShiftPx: 0, // right horizontal offset
+  });
+
   drawHairpin(notes[3], notes[3], ctx, 2, 4, {
     height: 10,
     yShift: 0, // vertical offset

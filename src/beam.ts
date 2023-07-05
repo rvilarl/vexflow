@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 // Copyright (c) 2023-present VexFlow contributors: https://github.com/vexflow/vexflow/graphs/contributors
 // MIT License
 
@@ -304,8 +303,7 @@ export class Beam extends Element {
           const prevNote = group[index - 1];
 
           const breaksOnEachRest = !config.beamRests && note.isRest();
-          const breaksOnFirstOrLastRest =
-            config.beamRests && config.beamMiddleOnly && note.isRest() && isFirstOrLast;
+          const breaksOnFirstOrLastRest = config.beamRests && config.beamMiddleOnly && note.isRest() && isFirstOrLast;
 
           let breakOnStemChange = false;
           if (config.maintainStemDirections && prevNote && !note.isRest() && !prevNote.isRest()) {
