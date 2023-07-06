@@ -4,7 +4,6 @@
 import { Beam } from './beam';
 import { Font } from './font';
 import { Fraction } from './fraction';
-import { GlyphProps } from './glyph';
 import { Modifier } from './modifier';
 import { drawDot, RenderContext } from './rendercontext';
 import { Stave } from './stave';
@@ -15,6 +14,14 @@ import { TickContext } from './tickcontext';
 import { Category } from './typeguard';
 import { defined, RuntimeError } from './util';
 import { Voice } from './voice';
+
+export interface GlyphProps {
+  codeHead: number;
+  stemBeamExtension: number;
+  stem: boolean;
+  codeFlagUp?: number;
+  beamCount: number;
+}
 
 export interface KeyProps {
   stemDownXOffset?: number;
@@ -90,6 +97,25 @@ export abstract class Note extends Tickable {
 
   static get CATEGORY(): string {
     return Category.Note;
+  }
+
+  // Return a glyph given duration and type. The type can be a custom glyph code from customNoteHeads.
+  // The default type is a regular note ('n').
+  static getGlyphProps(duration: string, type: string = 'n'): GlyphProps {
+    duration = Tables.sanitizeDuration(duration);
+
+    // Lookup duration for default glyph head code
+    let code = Tables.durationCodes[duration];
+    if (code === undefined) {
+      code = Tables.durationCodes['4'];
+    }
+
+    // Try and get the note head
+    const codeNoteHead = Tables.codeNoteHead(type.toUpperCase(), duration);
+    // Merge duration props for 'duration' with the note head properties.
+    if (codeNoteHead != 0x0000) code = { ...code, codeHead: codeNoteHead };
+
+    return code as GlyphProps;
   }
 
   /** Debug helper. Displays various note metrics for the given note. */

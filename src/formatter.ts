@@ -372,12 +372,6 @@ export class Formatter {
           return;
         }
 
-        // If activated rests not on default can be rendered as specified.
-        const position = currTickable.getGlyphProps().position.toUpperCase();
-        if (position !== 'R/4' && position !== 'B/4') {
-          return;
-        }
-
         if (alignAllNotes || currTickable.getBeam()) {
           // Align rests with previous/next notes.
           const props = currTickable.getKeyProps()[0];

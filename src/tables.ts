@@ -3,7 +3,7 @@
 import { ArticulationStruct } from './articulation';
 import { Font } from './font';
 import { Fraction } from './fraction';
-import { Glyph, GlyphProps } from './glyph';
+import type { GlyphProps } from './note';
 import { KeyProps } from './note';
 import { RuntimeError } from './util';
 
@@ -547,6 +547,63 @@ export class Tables {
   static RENDER_PRECISION_PLACES = 3;
   static RESOLUTION = RESOLUTION;
 
+  // 1/2, 1, 2, 4, 8, 16, 32, 64, 128
+  // NOTE: There is no 256 here! However, there are other mentions of 256 in this file.
+  // For example, in durations has a 256 key, and sanitizeDuration() can return 256.
+  // The sanitizeDuration() bit may need to be removed by 0xfe.
+  static durationCodes: Record<string, Partial<GlyphProps>> = {
+    '1/2': {
+      stem: false,
+    },
+
+    1: {
+      stem: false,
+    },
+
+    2: {
+      stem: true,
+    },
+
+    4: {
+      stem: true,
+    },
+
+    8: {
+      stem: true,
+      beamCount: 1,
+      stemBeamExtension: 0,
+      codeFlagUp: 0xe240 /*flag8thUp*/,
+    },
+
+    16: {
+      beamCount: 2,
+      stemBeamExtension: 0,
+      stem: true,
+      codeFlagUp: 0xe242 /*flag16thUp*/,
+    },
+
+    32: {
+      beamCount: 3,
+      stemBeamExtension: 7.5,
+      stem: true,
+      codeFlagUp: 0xe244 /*flag32ndUp*/,
+    },
+
+    64: {
+      beamCount: 4,
+      stemBeamExtension: 15,
+      stem: true,
+      codeFlagUp: 0xe246 /*flag64thUp*/,
+    },
+
+    128: {
+      beamCount: 5,
+      stemBeamExtension: 22.5,
+      stem: true,
+      codeFlagUp: 0xe248 /*flag128thUp*/,
+    },
+  };
+
   /**
    * Customize this by calling Flow.setMusicFont(...fontNames);
    */
@@ -680,30 +737,6 @@ export class Tables {
     return noteValue;
   }
 
-  static tabToGlyphProps(fret: string, scale: number = 1.0): GlyphProps {
-    let glyph = undefined;
-    let width = 0;
-    let shiftY = 0;
-
-    if (fret.toUpperCase() === 'X') {
-      const glyphMetrics = new Glyph('accidentalDoubleSharp', Tables.TABLATURE_FONT_SCALE).getMetrics();
-      glyph = 'accidentalDoubleSharp';
-      if (glyphMetrics.width == undefined || glyphMetrics.height == undefined)
-        throw new RuntimeError('InvalidMetrics', 'Width and height required');
-      width = glyphMetrics.width;
-      shiftY = -glyphMetrics.height / 2;
-    } else {
-      width = Tables.textWidth(fret);
-    }
-
-    return {
-      text: fret,
-      code: glyph,
-      getWidth: () => width * scale,
-      shiftY,
-    } as GlyphProps;
-  }
-
   // Used by annotation.ts and bend.ts. Clearly this implementation only works for the default font size.
   // TODO: The actual width depends on the font family, size, weight, style.
   static textWidth(text: string): number {
@@ -815,284 +848,215 @@ export class Tables {
     return ticks;
   }
 
-  static codeNoteHead(type: string, duration: string): string {
-    let code = '';
+  static codeNoteHead(type: string, duration: string): number {
     switch (type) {
       /* Diamond */
       case 'D0':
-        code = 'noteheadDiamondWhole';
-        break;
+        return 0xe0d8 /*noteheadDiamondWhole*/;
       case 'D1':
-        code = 'noteheadDiamondHalf';
-        break;
+        return 0xe0d9 /*noteheadDiamondHalf*/;
       case 'D2':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
       case 'D3':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
 
       /* Triangle */
       case 'T0':
-        code = 'noteheadTriangleUpWhole';
-        break;
+        return 0xe0bb /*noteheadTriangleUpWhole*/;
       case 'T1':
-        code = 'noteheadTriangleUpHalf';
-        break;
+        return 0xe0bc /*noteheadTriangleUpHalf*/;
       case 'T2':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
       case 'T3':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
 
       /* Cross */
       case 'X0':
-        code = 'noteheadXWhole';
-        break;
+        return 0xe0a7 /*noteheadXWhole*/;
       case 'X1':
-        code = 'noteheadXHalf';
-        break;
+        return 0xe0a8 /*noteheadXHalf*/;
       case 'X2':
-        code = 'noteheadXBlack';
-        break;
+        return 0xe0a9 /*noteheadXBlack*/;
       case 'X3':
-        code = 'noteheadCircleX';
-        break;
+        return 0xe0b3 /*noteheadCircleX*/;
 
       /* Square */
       case 'S1':
-        code = 'noteheadSquareWhite';
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/;
       case 'S2':
-        code = 'noteheadSquareBlack';
-        break;
+        return 0xe0b9 /*noteheadSquareBlack*/;
 
       /* Rectangle */
       case 'R1':
-        code = 'vexNoteHeadRectWhite'; // no smufl code
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/; // no smufl code
       case 'R2':
-        code = 'vexNoteHeadRectBlack'; // no smufl code
-        break;
+        return 0xe0b8 /*noteheadSquareWhite*/; // no smufl code
 
       case 'DO':
-        code = 'noteheadTriangleUpBlack';
-        break;
+        return 0xe0be /*noteheadTriangleUpBlack*/;
       case 'RE':
-        code = 'noteheadMoonBlack';
-        break;
+        return 0xe0cb /*noteheadMoonBlack*/;
       case 'MI':
-        code = 'noteheadDiamondBlack';
-        break;
+        return 0xe0db /*noteheadDiamondBlack*/;
       case 'FA':
-        code = 'noteheadTriangleLeftBlack';
-        break;
+        return 0xe0c0 /*noteheadTriangleLeftBlack*/;
       case 'FAUP':
-        code = 'noteheadTriangleRightBlack';
-        break;
+        return 0xe0c2 /*noteheadTriangleRightBlack*/;
       case 'SO':
-        code = 'noteheadBlack';
-        break;
+        return 0xe0a4 /*noteheadBlack*/;
       case 'LA':
-        code = 'noteheadSquareBlack';
-        break;
+        return 0xe0b9 /*noteheadSquareBlack*/;
       case 'TI':
-        code = 'noteheadTriangleRoundDownBlack';
-        break;
+        return 0xe0cd /*noteheadTriangleRoundDownBlack*/;
 
-      case 'D':
-      case 'H': // left for backwards compatibility
+      /* Diamond */
+      case 'DI':
+      case 'H': // Harmonics
         switch (duration) {
           case '1/2':
-            code = 'noteheadDiamondDoubleWhole';
-            break;
+            return 0xe0d7 /*noteheadDiamondDoubleWhole*/;
           case '1':
-            code = 'noteheadDiamondWhole';
-            break;
+            return 0xe0d8 /*noteheadDiamondWhole*/;
           case '2':
-            code = 'noteheadDiamondHalf';
-            break;
+            return 0xe0d9 /*noteheadDiamondHalf*/;
           default:
-            code = 'noteheadDiamondBlack';
-            break;
+            return 0xe0db /*noteheadDiamondBlack*/;
         }
-        break;
-      case 'N':
-      case 'G':
-        switch (duration) {
-          case '1/2':
-            code = 'noteheadDoubleWhole';
-            break;
-          case '1':
-            code = 'noteheadWhole';
-            break;
-          case '2':
-            code = 'noteheadHalf';
-            break;
-          default:
-            code = 'noteheadBlack';
-            break;
-        }
-        break;
-      case 'M': // left for backwards compatibility
       case 'X':
+      case 'M': // Muted
         switch (duration) {
           case '1/2':
-            code = 'noteheadXDoubleWhole';
-            break;
+            return 0xe0a6 /*noteheadXDoubleWhole*/;
           case '1':
-            code = 'noteheadXWhole';
-            break;
+            return 0xe0a7 /*noteheadXWhole*/;
           case '2':
-            code = 'noteheadXHalf';
-            break;
+            return 0xe0a8 /*noteheadXHalf*/;
           default:
-            code = 'noteheadXBlack';
-            break;
+            return 0xe0a9 /*noteheadXBlack*/;
         }
-        break;
       case 'CX':
         switch (duration) {
           case '1/2':
-            code = 'noteheadCircleXDoubleWhole';
-            break;
+            return 0xe0b0 /*noteheadCircleXDoubleWhole*/;
           case '1':
-            code = 'noteheadCircleXWhole';
-            break;
+            return 0xe0b1 /*noteheadCircleXWhole*/;
           case '2':
-            code = 'noteheadCircleXHalf';
-            break;
+            return 0xe0b2 /*noteheadCircleXHalf*/;
           default:
-            code = 'noteheadCircleX';
-            break;
+            return 0xe0b3 /*noteheadCircleX*/;
         }
-        break;
       case 'CI':
         switch (duration) {
           case '1/2':
-            code = 'noteheadCircledDoubleWhole';
-            break;
+            return 0xe0e7 /*noteheadCircledDoubleWhole*/;
           case '1':
-            code = 'noteheadCircledWhole';
-            break;
+            return 0xe0e6 /*noteheadCircledWhole*/;
           case '2':
-            code = 'noteheadCircledHalf';
-            break;
+            return 0xe0e5 /*noteheadCircledHalf*/;
           default:
-            code = 'noteheadCircledBlack';
-            break;
+            return 0xe0e4 /*noteheadCircledBlack*/;
         }
-        break;
       case 'SQ':
         switch (duration) {
           case '1/2':
-            code = 'noteheadDoubleWholeSquare';
-            break;
+            return 0xe0a1 /*noteheadDoubleWholeSquare*/;
           case '1':
-            code = 'noteheadSquareWhite';
-            break;
+            return 0xe0b8 /*noteheadSquareWhite*/;
           case '2':
-            code = 'noteheadSquareWhite';
-            break;
+            return 0xe0b8 /*noteheadSquareWhite*/;
           default:
-            code = 'noteheadSquareBlack';
-            break;
+            return 0xe0b9 /*noteheadSquareBlack*/;
         }
-        break;
       case 'TU':
         switch (duration) {
           case '1/2':
-            code = 'noteheadTriangleUpDoubleWhole';
-            break;
+            return 0xe0ba /*noteheadTriangleUpDoubleWhole*/;
           case '1':
-            code = 'noteheadTriangleUpWhole';
-            break;
+            return 0xe0bb /*noteheadTriangleUpWhole*/;
           case '2':
-            code = 'noteheadTriangleUpHalf';
-            break;
+            return 0xe0bc /*noteheadTriangleUpHalf*/;
           default:
-            code = 'noteheadTriangleUpBlack';
-            break;
+            return 0xe0be /*noteheadTriangleUpBlack*/;
         }
-        break;
       case 'TD':
         switch (duration) {
           case '1/2':
-            code = 'noteheadTriangleDownDoubleWhole';
-            break;
+            return 0xe0c3 /*noteheadTriangleDownDoubleWhole*/;
           case '1':
-            code = 'noteheadTriangleDownWhole';
-            break;
+            return 0xe0c4 /*noteheadTriangleDownWhole*/;
           case '2':
-            code = 'noteheadTriangleDownHalf';
-            break;
+            return 0xe0c5 /*noteheadTriangleDownHalf*/;
           default:
-            code = 'noteheadTriangleDownBlack';
-            break;
+            return 0xe0c7 /*noteheadTriangleDownBlack*/;
         }
-        break;
       case 'SF':
         switch (duration) {
           case '1/2':
-            code = 'noteheadSlashedDoubleWhole1';
-            break;
+            return 0xe0d5 /*noteheadSlashedDoubleWhole1*/;
           case '1':
-            code = 'noteheadSlashedWhole1';
-            break;
+            return 0xe0d3 /*noteheadSlashedWhole1*/;
           case '2':
-            code = 'noteheadSlashedHalf1';
-            break;
+            return 0xe0d1 /*noteheadSlashedHalf1*/;
           default:
-            code = 'noteheadSlashedBlack1';
+            return 0xe0cf /*noteheadSlashedBlack1*/;
         }
-        break;
       case 'SB':
         switch (duration) {
           case '1/2':
-            code = 'noteheadSlashedDoubleWhole2';
-            break;
+            return 0xe0d6 /*noteheadSlashedDoubleWhole2*/;
           case '1':
-            code = 'noteheadSlashedWhole2';
-            break;
+            return 0xe0d4 /*noteheadSlashedWhole2*/;
           case '2':
-            code = 'noteheadSlashedHalf2';
-            break;
+            return 0xe0d2 /*noteheadSlashedHalf2*/;
           default:
-            code = 'noteheadSlashedBlack2';
+            return 0xe0d0 /*noteheadSlashedBlack2*/;
+        }
+      case 'R':
+        switch (duration) {
+          case '1/2':
+            return 0xe4e2 /*restDoubleWhole*/;
+          case '1':
+            return 0xe4e3 /*restWhole*/;
+          case '2':
+            return 0xe4e4 /*restHalf*/;
+          case '4':
+            return 0xe4e5 /*restQuarter*/;
+          case '8':
+            return 0xe4e6 /*rest8th*/;
+          case '16':
+            return 0xe4e7 /*rest16th*/;
+          case '32':
+            return 0xe4e8 /*rest32nd*/;
+          case '64':
+            return 0xe4e9 /*rest64th*/;
+          case '128':
+            return 0xe4ea /*rest128th*/;
         }
         break;
+      case 'S':
+        switch (duration) {
+          case '1/2':
+            return 0xe10a /*noteheadSlashWhiteDoubleWhole*/;
+          case '1':
+            return 0xe102 /*noteheadSlashWhiteWhole*/;
+          case '2':
+            return 0xe103 /*noteheadSlashWhiteHalf*/;
+          default:
+            return 0xe100 /*noteheadSlashVerticalEnds*/;
+        }
+      default:
+        switch (duration) {
+          case '1/2':
+            return 0xe0a0 /*noteheadDoubleWhole*/;
+          case '1':
+            return 0xe0a2 /*noteheadWhole*/;
+          case '2':
+            return 0xe0a3 /*noteheadHalf*/;
+          default:
+            return 0xe0a4 /*noteheadBlack*/;
+        }
     }
-    return code;
-  }
-
-  // Return a glyph given duration and type. The type can be a custom glyph code from customNoteHeads.
-  // The default type is a regular note ('n').
-  static getGlyphProps(duration: string, type: string = 'n'): GlyphProps {
-    duration = Tables.sanitizeDuration(duration);
-
-    // Lookup duration for default glyph head code
-    let code = durationCodes[duration];
-    if (code === undefined) {
-      code = durationCodes['4'];
-    }
-
-    // Get glyph properties for 'type' from duration string (note, rest, harmonic, muted, slash)
-    let glyphTypeProperties = code[type];
-
-    // Try and get it from the custom list of note heads
-    const codeNoteHead = Tables.codeNoteHead(type.toUpperCase(), duration);
-    if (codeNoteHead != '')
-      glyphTypeProperties = { ...glyphTypeProperties, ...{ codeHead: codeNoteHead, code: codeNoteHead } };
-
-    const codeHead = glyphTypeProperties.codeHead as string;
-
-    // The default implementation of getWidth() calls Glyph.getWidth(codeHead, scale).
-    // This can be overridden by an individual glyph type (see slash noteheads below: Tables.SLASH_NOTEHEAD_WIDTH).
-    const getWidth = (scale = Tables.NOTATION_FONT_SCALE): number => Glyph.getWidth(codeHead, scale);
-
-    // Merge duration props for 'duration' with the note head properties.
-    return { ...code.common, getWidth: getWidth, ...glyphTypeProperties } as GlyphProps;
+    return 0x0000;
   }
 
   /* The list of valid note types. Used by note.ts during parseNoteStruct(). */
@@ -1105,307 +1069,3 @@ export class Tables {
     resolution: RESOLUTION,
   };
 }
-
-// 1/2, 1, 2, 4, 8, 16, 32, 64, 128
-// NOTE: There is no 256 here! However, there are other mentions of 256 in this file.
-// For example, in durations has a 256 key, and sanitizeDuration() can return 256.
-// The sanitizeDuration() bit may need to be removed by 0xfe.
-const durationCodes: Record<string, Record<string, Partial<GlyphProps>>> = {
-  '1/2': {
-    common: {
-      codeHead: '',
-      stem: false,
-      flag: false,
-      stemUpExtension: -Tables.STEM_HEIGHT,
-      stemDownExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemUpExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemDownExtension: -Tables.STEM_HEIGHT,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Breve rest
-      codeHead: 'restDoubleWhole',
-      rest: true,
-      position: 'B/5',
-      dotShiftY: 0.5,
-    },
-    s: {
-      // Breve note slash -
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  1: {
-    common: {
-      codeHead: '',
-      stem: false,
-      flag: false,
-      stemUpExtension: -Tables.STEM_HEIGHT,
-      stemDownExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemUpExtension: -Tables.STEM_HEIGHT,
-      tabnoteStemDownExtension: -Tables.STEM_HEIGHT,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Whole rest
-      codeHead: 'restWhole',
-      ledgerCodeHead: 'restWholeLegerLine',
-      rest: true,
-      position: 'D/5',
-      dotShiftY: 0.5,
-    },
-    s: {
-      // Whole note slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  2: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: false,
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Half rest
-      codeHead: 'restHalf',
-      ledgerCodeHead: 'restHalfLegerLine',
-      stem: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-    },
-    s: {
-      // Half note slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  4: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: false,
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Quarter rest
-      codeHead: 'restQuarter',
-      stem: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.5,
-      lineBelow: 1.5,
-    },
-    s: {
-      // Quarter slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  8: {
-    common: {
-      codeHead: '',
-      stem: true,
-      flag: true,
-      beamCount: 1,
-      stemBeamExtension: 0,
-      codeFlagUpstem: 'flag8thUp',
-      codeFlagDownstem: 'flag8thDown',
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Eighth rest
-      codeHead: 'rest8th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.0,
-      lineBelow: 1.0,
-    },
-    s: {
-      // Eighth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  16: {
-    common: {
-      codeHead: '',
-      beamCount: 2,
-      stemBeamExtension: 0,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag16thUp',
-      codeFlagDownstem: 'flag16thDown',
-      stemUpExtension: 0,
-      stemDownExtension: 0,
-      tabnoteStemUpExtension: 0,
-      tabnoteStemDownExtension: 0,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Sixteenth rest
-      codeHead: 'rest16th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -0.5,
-      lineAbove: 1.0,
-      lineBelow: 2.0,
-    },
-    s: {
-      // Sixteenth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  32: {
-    common: {
-      codeHead: '',
-      beamCount: 3,
-      stemBeamExtension: 7.5,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag32ndUp',
-      codeFlagDownstem: 'flag32ndDown',
-      stemUpExtension: 9,
-      stemDownExtension: 9,
-      tabnoteStemUpExtension: 9,
-      tabnoteStemDownExtension: 9,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Thirty-second rest
-      codeHead: 'rest32nd',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -1.5,
-      lineAbove: 2.0,
-      lineBelow: 2.0,
-    },
-    s: {
-      // Thirty-second slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  64: {
-    common: {
-      codeHead: '',
-      beamCount: 4,
-      stemBeamExtension: 15,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag64thUp',
-      codeFlagDownstem: 'flag64thDown',
-      stemUpExtension: 13,
-      stemDownExtension: 13,
-      tabnoteStemUpExtension: 13,
-      tabnoteStemDownExtension: 13,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Sixty-fourth rest
-      codeHead: 'rest64th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -1.5,
-      lineAbove: 2.0,
-      lineBelow: 3.0,
-    },
-    s: {
-      // Sixty-fourth slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-
-  128: {
-    common: {
-      codeHead: '',
-      beamCount: 5,
-      stemBeamExtension: 22.5,
-      stem: true,
-      flag: true,
-      codeFlagUpstem: 'flag128thUp',
-      codeFlagDownstem: 'flag128thDown',
-      stemUpExtension: 22,
-      stemDownExtension: 22,
-      tabnoteStemUpExtension: 22,
-      tabnoteStemDownExtension: 22,
-      dotShiftY: 0,
-      lineAbove: 0,
-      lineBelow: 0,
-    },
-    r: {
-      // Hundred-twenty-eight rest
-      codeHead: 'rest128th',
-      stem: false,
-      flag: false,
-      rest: true,
-      position: 'B/4',
-      dotShiftY: -2.5,
-      lineAbove: 3.0,
-      lineBelow: 3.0,
-    },
-    s: {
-      // Hundred-twenty-eight slash
-      // Drawn with canvas primitives
-      getWidth: () => Tables.SLASH_NOTEHEAD_WIDTH,
-      position: 'B/4',
-    },
-  },
-};
