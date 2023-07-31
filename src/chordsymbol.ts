@@ -158,8 +158,8 @@ export class ChordSymbol extends Modifier {
       const note: Note = symbol.checkAttachedNote();
       let lineSpaces = 1;
 
-      for (let j = 0; j < symbol.symbolBlocks.length; ++j) {
-        const block = symbol.symbolBlocks[j];
+      for (let j = 0; j < symbol.children.length; ++j) {
+        const block = symbol.children[j] as ChordSymbolBlock;
         const sup = block.isSuperscript();
         const sub = block.isSubscript();
         block.setXShift(width);
@@ -173,7 +173,7 @@ export class ChordSymbol extends Modifier {
         // If a subscript immediately follows a superscript block, try to
         // overlay them.
         if (sub && j > 0) {
-          const prev = symbol.symbolBlocks[j - 1];
+          const prev = symbol.children[j - 1] as ChordSymbolBlock;
           if (prev.isSuperscript()) {
             // slide the symbol over so it lines up with superscript
             block.setXShift(width - prev.getWidth() - ChordSymbol.minPadding);
@@ -223,7 +223,6 @@ export class ChordSymbol extends Modifier {
     return true;
   }
 
-  protected symbolBlocks: ChordSymbolBlock[] = [];
   protected horizontal: number = ChordSymbolHorizontalJustify.LEFT;
   protected vertical: number = ChordSymbolVerticalJustify.TOP;
 
@@ -285,7 +284,7 @@ export class ChordSymbol extends Modifier {
       symbolModifier: SymbolModifiers;
     }>
   ): this {
-    this.symbolBlocks.push(this.getSymbolBlock(parameters));
+    this.children.push(this.getSymbolBlock(parameters));
     return this;
   }
 
@@ -437,11 +436,7 @@ export class ChordSymbol extends Modifier {
     }
     L('Rendering ChordSymbol: ', x, y);
 
-    this.symbolBlocks.forEach((symbol) => {
-      L('Rendering Text: ', symbol.getText(), x + symbol.getXShift(), y + symbol.getYShift());
-
-      symbol.renderText(ctx, x, y);
-    });
+    this.renderText(ctx, x, y);
     ctx.closeGroup();
     this.restoreStyle();
     ctx.restore();
