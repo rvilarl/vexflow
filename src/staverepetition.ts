@@ -31,9 +31,6 @@ export class Repetition extends StaveModifier {
 
   protected symbolType: number;
 
-  protected xShift: number;
-  protected yShift: number;
-
   constructor(type: number, x: number, yShift: number) {
     super();
 
@@ -41,16 +38,6 @@ export class Repetition extends StaveModifier {
     this.x = x;
     this.xShift = 0;
     this.yShift = yShift;
-  }
-
-  setShiftX(x: number): this {
-    this.xShift = x;
-    return this;
-  }
-
-  setShiftY(y: number): this {
-    this.yShift = y;
-    return this;
   }
 
   draw(stave: Stave, x: number): this {

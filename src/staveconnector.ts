@@ -115,8 +115,6 @@ export class StaveConnector extends Element {
   readonly bottomStave: Stave;
   readonly thickness: number;
 
-  protected xShift: number;
-
   constructor(topStave: Stave, bottomStave: Stave) {
     super();
 
@@ -166,19 +164,6 @@ export class StaveConnector extends Element {
       },
     });
     return this;
-  }
-
-  setXShift(xShift: number): this {
-    if (typeof xShift !== 'number') {
-      throw new RuntimeError('InvalidType', 'xShift must be a Number');
-    }
-
-    this.xShift = xShift;
-    return this;
-  }
-
-  getXShift(): number {
-    return this.xShift;
   }
 
   /** Render connector and associated text. */
