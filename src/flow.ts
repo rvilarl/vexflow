@@ -226,7 +226,7 @@ export class Flow {
     // Introduce the correct font stacks step by step.
     switch (fontNames[0]) {
       case 'Bravura':
-        CommonMetrics.fontFamily = 'Bravura,Roboto Slab';
+        CommonMetrics.fontFamily = 'Bravura,Academico';
         break;
       case 'Gonville':
         CommonMetrics.fontFamily = 'GonvilleSmufl,Bravura,Roboto Slab';
