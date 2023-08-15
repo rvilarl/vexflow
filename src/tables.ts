@@ -120,9 +120,8 @@ export const CommonMetrics: Record<string, any> = {
     fontWeight: 'bold',
   },
 
-  Strokes: {
+  Stroke: {
     text: {
-      fontFamily: 'Times New Roman, serif',
       fontSize: 10,
       fontStyle: 'italic',
       fontWeight: 'bold',
