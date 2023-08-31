@@ -121,7 +121,9 @@ export const CommonMetrics: Record<string, any> = {
   },
 
   TabNote: {
-    fontSize: 9,
+    text: {
+      fontSize: 9,
+    },
   },
 
   TabSlide: {

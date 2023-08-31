@@ -61,10 +61,7 @@ export abstract class StemmableNote extends Note {
         this.getStemDirection() === Stem.DOWN ? glyphProps.codeFlagDownstem ?? '' : glyphProps.codeFlagUpstem ?? '';
 
       this.flag.setText(flagCode);
-      // #FIXME: HACK to use 30 as fontSize default rather than 39 used with glyphs.
-      // HACK-BEGIN
-      this.flag.fontSize = (this.renderOptions.glyphFontScale / 39) * 30;
-      // HACK-END
+      this.flag.fontSize = this.renderOptions.glyphFontScale;
       this.flag.measureText();
     }
   }

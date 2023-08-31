@@ -682,7 +682,7 @@ export abstract class Note extends Tickable {
   /** Get the `x` coordinate to the right of the note. */
   getTieRightX(): number {
     let tieStartX = this.getAbsoluteX();
-    const noteGlyphWidth = this.glyphProps.getWidth();
+    const noteGlyphWidth = this.getGlyphWidth();
     tieStartX += noteGlyphWidth / 2;
     tieStartX += -this.width / 2 + this.width + 2;
 
@@ -692,7 +692,7 @@ export abstract class Note extends Tickable {
   /** Get the `x` coordinate to the left of the note. */
   getTieLeftX(): number {
     let tieEndX = this.getAbsoluteX();
-    const noteGlyphWidth = this.glyphProps.getWidth();
+    const noteGlyphWidth = this.getGlyphWidth();
     tieEndX += noteGlyphWidth / 2;
     tieEndX -= this.width / 2 + 2;
 
