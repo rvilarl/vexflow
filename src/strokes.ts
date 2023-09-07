@@ -177,12 +177,12 @@ export class Stroke extends Modifier {
         this.type === Stroke.Type.ARPEGGIO_DIRECTIONLESS
       ) {
         ctx.openRotation(90, x + this.xShift, topY);
-        el.renderText(ctx, x + this.xShift, topY - el.getTextMetrics().actualBoundingBoxDescent + el.getHeight() / 2);
+        el.renderText(ctx, x + this.xShift, topY + el.getHeight() / 2);
         ctx.closeRotation();
         textY = topY + el.getWidth() + 5;
       } else {
         ctx.openRotation(-90, x + this.xShift, botY);
-        el.renderText(ctx, x + this.xShift, botY - el.getTextMetrics().actualBoundingBoxDescent + el.getHeight() / 2);
+        el.renderText(ctx, x + this.xShift, botY + el.getHeight() / 2);
         ctx.closeRotation();
         textY = botY - el.getWidth() - 5;
       }

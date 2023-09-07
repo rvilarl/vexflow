@@ -568,15 +568,9 @@ export class Element {
     if (!context) throw new RuntimeError('Font', 'No txt context');
     context.font = Font.toCSSString(Font.validate(this.textFont));
     this.textMetrics = context.measureText(this.text);
-    const ascent = this.textMetrics.actualBoundingBoxAscent;
-    this.boundingBox = new BoundingBox(
-      0,
-      -ascent,
-      this.textMetrics.width,
-      this.textMetrics.actualBoundingBoxDescent + ascent
-    );
-    this.height = this.boundingBox.getH();
+    this.height = this.textMetrics.actualBoundingBoxDescent + this.textMetrics.actualBoundingBoxAscent;
     this.width = this.textMetrics.width;
+    this.boundingBox = new BoundingBox(0, -this.textMetrics.actualBoundingBoxAscent, this.width, this.height);
     return this.textMetrics;
   }
 
