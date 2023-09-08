@@ -11,8 +11,8 @@ import { Articulation } from '../src/articulation';
 import { Beam } from '../src/beam';
 import { Bend } from '../src/bend';
 import { Dot } from '../src/dot';
+import { Element } from '../src/element';
 import { Flow } from '../src/flow';
-import { Font, FontGlyph, FontWeight } from '../src/font';
 import { Formatter } from '../src/formatter';
 import { FretHandFinger } from '../src/frethandfinger';
 import { ModifierPosition } from '../src/modifier';
@@ -62,16 +62,10 @@ const FormatterTests = {
 /** Calculate the glyph's width in the current music font. */
 // How is this different from Glyph.getWidth()? The numbers don't match up.
 function getGlyphWidth(glyphName: string): number {
-  // `38` seems to be the `fontScale` specified in many classes, such as
-  // Accidental, Articulation, Ornament, Strokes. Does this mean `38pt`???
-  //
-  // However, tables.ts specifies:
-  //   NOTATION_FONT_SCALE: 39,
-  //   TABLATURE_FONT_SCALE: 39,
-  const musicFont = Tables.currentMusicFont();
-  const glyph: FontGlyph = musicFont.getGlyphs()[glyphName];
-  const widthInEm = (glyph.xMax - glyph.xMin) / musicFont.getResolution();
-  return widthInEm * 38 * Font.scaleToPxFrom.pt;
+  const el = new Element();
+  el.setText(String.fromCharCode(parseInt(glyphName, 16)));
+  el.measureText()
+  return el.getWidth();
 }
 
 function buildTickContexts(assert: Assert): void {
@@ -187,7 +181,9 @@ function penultimateNote(options: TestOptions): void {
     stave.addTimeSignature('2/4');
     voices = [];
     f.draw();
-    f.getContext().fillText(`softmax: ${softmax.toString()}`, staffWidth + 20, y + 50);
+    f.getContext()
+      .setFont('Arial', 10)
+      .fillText(`softmax: ${softmax.toString()}`, staffWidth + 20, y + 50);
     y += 100;
   };
   draw(15);
@@ -460,7 +456,7 @@ function justifyStaveNotes(options: TestOptions): void {
 
     f.Formatter()
       .joinVoices(voices)
-      .format(voices, width - (Stave.defaultPadding + getGlyphWidth('gClef')));
+      .format(voices, width - (Stave.defaultPadding + getGlyphWidth('E050' /*gClef*/)));
 
     // Show the the width of notes via a horizontal line with red, green, yellow, blue, gray indicators.
     voices[0].getTickables().forEach((note) => Note.plotMetrics(ctx, note, y + 140)); // Bottom line.
@@ -488,7 +484,7 @@ function notesWithTab(options: TestOptions): void {
 
     y += 100;
 
-    f.TabStave({ y: y }).addTabGlyph().setNoteStartX(stave.getNoteStartX());
+    f.TabStave({ y: y }).addClef('tab').setNoteStartX(stave.getNoteStartX());
 
     const tabVoice = score.voice([
       f
@@ -556,7 +552,7 @@ function multiStaves(options: TestOptions): void {
   ];
 
   const staveYs = [20, 130, 250];
-  let staveWidth = width + getGlyphWidth('gClef') + getGlyphWidth('timeSig8') + Stave.defaultPadding;
+  let staveWidth = width + getGlyphWidth('E050' /*gClef*/) + getGlyphWidth('E088' /*timeSig8*/) + Stave.defaultPadding;
   let staves = [
     f.Stave({ y: staveYs[0], width: staveWidth }).addClef('treble').addTimeSignature('6/8'),
     f.Stave({ y: staveYs[1], width: staveWidth }).addClef('treble').addTimeSignature('6/8'),
@@ -686,7 +682,9 @@ function softMax(options: TestOptions): void {
       .addTimeSignature('5/4');
 
     f.draw();
-    f.getContext().fillText(`softmax: ${factor.toString()}`, textX, y + 50);
+    f.getContext()
+      .setFont('Arial', 10)
+      .fillText(`softmax: ${factor.toString()}`, textX, y + 50);
     options.assert.ok(true);
   }
 
@@ -835,7 +833,7 @@ function annotations(options: TestOptions): void {
     const stave = new Stave(10, y, sm.width);
     const notes: StaveNote[] = [];
     let iii = 0;
-    context.fillText(sm.title, 100, y);
+    context.setFont('Arial', 10).fillText(sm.title, 100, y);
     y += rowSize;
 
     durations.forEach((dd) => {
@@ -847,7 +845,7 @@ function annotations(options: TestOptions): void {
         note.addModifier(
           new Annotation(sm.lyrics[iii])
             .setVerticalJustification(Annotation.VerticalJustify.BOTTOM)
-            .setFont(Font.SERIF, 12, FontWeight.NORMAL)
+            .setFont(Tables.lookupMetric('fontFamily'), 12, 'normal')
         );
       }
       notes.push(note);

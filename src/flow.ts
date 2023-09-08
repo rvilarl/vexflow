@@ -5,7 +5,6 @@ import { BarNote } from './barnote';
 import { Beam } from './beam';
 import { Bend } from './bend';
 import { BoundingBox } from './boundingbox';
-import { BoundingBoxComputation } from './boundingboxcomputation';
 import { CanvasContext } from './canvascontext';
 import { ChordSymbol, ChordSymbolHorizontalJustify, ChordSymbolVerticalJustify, SymbolModifiers } from './chordsymbol';
 import { Clef } from './clef';
@@ -16,12 +15,11 @@ import { Dot } from './dot';
 import { EasyScore } from './easyscore';
 import { Element } from './element';
 import { Factory } from './factory';
-import { Font, FontModule, FontStyle, FontWeight } from './font';
+import { Font, FontStyle, FontWeight } from './font';
 import { Formatter } from './formatter';
 import { Fraction } from './fraction';
 import { FretHandFinger } from './frethandfinger';
 import { GhostNote } from './ghostnote';
-import { Glyph } from './glyph';
 import { GlyphNote } from './glyphnote';
 import { GraceNote } from './gracenote';
 import { GraceNoteGroup } from './gracenotegroup';
@@ -100,7 +98,6 @@ export class Flow {
   static Beam = Beam;
   static Bend = Bend;
   static BoundingBox = BoundingBox;
-  static BoundingBoxComputation = BoundingBoxComputation;
   static CanvasContext = CanvasContext;
   static ChordSymbol = ChordSymbol;
   static Clef = Clef;
@@ -116,7 +113,6 @@ export class Flow {
   static Fraction = Fraction;
   static FretHandFinger = FretHandFinger;
   static GhostNote = GhostNote;
-  static Glyph = Glyph;
   static GlyphNote = GlyphNote;
   static GraceNote = GraceNote;
   static GraceNoteGroup = GraceNoteGroup;
@@ -218,67 +214,13 @@ export class Flow {
    *
    * @returns an array of Font objects corresponding to the provided `fontNames`.
    */
-  static setMusicFont(...fontNames: string[]): Font[] {
-    // #FIXME: HACK to facilitate the VexFlow 5 migration.
-    // HACK-BEGIN
-    // Introduce the correct font stacks step by step.
-    switch (fontNames[0]) {
-      case 'Bravura':
-        CommonMetrics.fontFamily = 'Bravura,Roboto Slab';
-        break;
-      case 'Gonville':
-        CommonMetrics.fontFamily = 'GonvilleSmufl,Bravura,Roboto Slab';
-        break;
-      case 'Leland':
-        CommonMetrics.fontFamily = 'Leland,Bravura,Roboto Slab';
-        break;
-      case 'Petaluma':
-        CommonMetrics.fontFamily = 'Petaluma,Bravura,Petaluma Script';
-        break;
-      case 'MuseJazz':
-        CommonMetrics.fontFamily = 'MuseJazz,Bravura,Academico';
-        break;
-      case 'Gootville':
-        CommonMetrics.fontFamily = 'Gootville,Bravura,Academico';
-        break;
-      case 'Finale Ash':
-        CommonMetrics.fontFamily = 'Finale Ash,Bravura,Academico';
-        break;
-      case 'Finale Maestro':
-        CommonMetrics.fontFamily = 'Finale Maestro,Bravura,Academico';
-        break;
-      case 'Finale Broadway':
-        CommonMetrics.fontFamily = 'Finale Broadway,Bravura,Academico';
-        break;
-      default:
-        CommonMetrics.fontFamily = fontNames.join(',');
-    }
-    // HACK-END
-
+  static setMusicFont(...fontNames: string[]): void {
     // Convert the array of font names into an array of Font objects.
-    const fonts = fontNames.map((fontName) => Font.load(fontName));
-    Tables.MUSIC_FONT_STACK = fonts;
-    Glyph.MUSIC_FONT_STACK = fonts.slice();
-    Glyph.CURRENT_CACHE_KEY = fontNames.join(',');
-    return fonts;
-  }
-
-  /**
-   * Used with vexflow-core which supports dynamic font loading.
-   */
-  // eslint-disable-next-line
-  static async fetchMusicFont(fontName: string, fontModuleOrPath?: string | FontModule): Promise<void> {
-    // The default implementation does nothing.
-    // See vexflow-core.ts for the implementation that vexflow-core.js uses.
+    CommonMetrics.fontFamily = fontNames.join(',');
   }
 
   static getMusicFont(): string[] {
-    const fonts = Tables.MUSIC_FONT_STACK;
-    return fonts.map((font) => font.getName());
-  }
-
-  static getMusicFontStack(): Font[] {
-    return Tables.MUSIC_FONT_STACK;
+    return Tables.lookupMetric('fontFamily').split(',');
   }
 
   static get RENDER_PRECISION_PLACES(): number {
@@ -297,29 +239,11 @@ export class Flow {
     Tables.SOFTMAX_FACTOR = factor;
   }
 
-  static get NOTATION_FONT_SCALE(): number {
-    return Tables.NOTATION_FONT_SCALE;
-  }
-  static set NOTATION_FONT_SCALE(value: number) {
-    Tables.NOTATION_FONT_SCALE = value;
-  }
-  static get TABLATURE_FONT_SCALE(): number {
-    return Tables.TABLATURE_FONT_SCALE;
-  }
-  static set TABLATURE_FONT_SCALE(value: number) {
-    Tables.TABLATURE_FONT_SCALE = value;
-  }
   static get RESOLUTION(): number {
     return Tables.RESOLUTION;
   }
   static set RESOLUTION(value: number) {
     Tables.RESOLUTION = value;
-  }
-  static get SLASH_NOTEHEAD_WIDTH(): number {
-    return Tables.SLASH_NOTEHEAD_WIDTH;
-  }
-  static set SLASH_NOTEHEAD_WIDTH(value: number) {
-    Tables.SLASH_NOTEHEAD_WIDTH = value;
   }
   static get STAVE_LINE_DISTANCE(): number {
     return Tables.STAVE_LINE_DISTANCE;

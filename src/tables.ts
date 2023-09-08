@@ -124,6 +124,10 @@ export const CommonMetrics: Record<string, any> = {
     fontFamily: 'Arial, sans-serif',
     fontSize: 10,
     fontWeight: 'bold',
+    verticalPadding: 8,
+    stemPadding: 2,
+    leftPadding: 5,
+    rightPadding: 6,
   },
 
   Stroke: {

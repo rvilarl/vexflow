@@ -10,9 +10,7 @@
 // In the future, we could do something different with this entry file, such as turn on flags for logging.
 
 import { Flow } from '../src/flow';
-import { loadAllMusicFonts } from '../src/fonts/load_all';
 
-loadAllMusicFonts();
 Flow.setMusicFont('Bravura', 'Gonville', 'Custom');
 
 // Re-export all exports from index.ts.
