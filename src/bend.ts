@@ -7,12 +7,17 @@ import { ModifierContextState } from './modifiercontext';
 import { Category, isTabNote } from './typeguard';
 import { RuntimeError } from './util';
 
-export interface BendPhrase {
-  x?: number;
+class BendElement extends Element {
   type: number;
-  text: string;
-  width?: number;
-  drawWidth?: number;
+  drawWidth: number;
+
+  constructor(type: number, text: string, width?: number) {
+    super('Bend');
+    this.type = type;
+    this.setText(text);
+    this.measureText();
+    this.drawWidth = Math.max(width ?? 0, this.getWidth()) / 2 + 5;
+  }
 }
 
 /** Bend implements tablature bends. */
@@ -45,7 +50,7 @@ export class Bend extends Modifier {
           state.topTextLine = stringPos;
         }
       }
-      bend.setXShift(lastWidth);
+      bend.setXShift(lastWidth + 5);
       lastWidth = bend.getWidth();
       bend.setTextLine(state.topTextLine);
     }
@@ -55,8 +60,8 @@ export class Bend extends Modifier {
     return true;
   }
 
-  protected tap: string;
-  protected phrase: BendPhrase[];
+  protected tap: Element;
+  protected phrase: BendElement[] = [];
 
   public renderOptions: {
     lineWidth: number;
@@ -95,11 +100,17 @@ export class Bend extends Modifier {
    *   }]
    * ```
    */
-  constructor(phrase: BendPhrase[]) {
+  constructor(
+    phrase: {
+      type: number;
+      text: string;
+      width?: number;
+    }[]
+  ) {
     super();
 
     this.xShift = 0;
-    this.tap = '';
+    this.tap = new Element('Bend');
     this.renderOptions = {
       lineWidth: 1.5,
       lineStyle: '#777777',
@@ -107,7 +118,11 @@ export class Bend extends Modifier {
       releaseWidth: 8,
     };
 
-    this.phrase = phrase;
+    phrase.forEach((value) => {
+      const width =
+        value.width ?? value.type === Bend.UP ? this.renderOptions.bendWidth : this.renderOptions.releaseWidth;
+      this.phrase.push(new BendElement(value.type, value.text, width));
+    });
 
     this.updateWidth();
   }
@@ -120,38 +135,21 @@ export class Bend extends Modifier {
   }
 
   setTap(value: string): this {
-    this.tap = value;
+    this.tap.setText(value);
+    this.tap.measureText();
     return this;
   }
 
   getTextHeight(): number {
-    const element = new Element(Category.Bend);
-    element.setText(this.phrase[0].text);
-    element.measureText();
-    return element.getHeight();
+    return this.phrase[0].getHeight();
   }
 
   /** Recalculate width. */
   protected updateWidth(): this {
-    const measureText = (text: string) => {
-      const element = new Element(Category.Bend);
-      element.setText(text);
-      element.measureText();
-      return element.getWidth();
-    };
-
     let totalWidth = 0;
     for (let i = 0; i < this.phrase.length; ++i) {
       const bend = this.phrase[i];
-      if (bend.width !== undefined) {
-        totalWidth += bend.width;
-      } else {
-        const additionalWidth = bend.type === Bend.UP ? this.renderOptions.bendWidth : this.renderOptions.releaseWidth;
-
-        bend.width = Math.max(additionalWidth, measureText(bend.text)) + 3;
-        bend.drawWidth = bend.width / 2;
-        totalWidth += bend.width;
-      }
+      totalWidth += bend.getWidth();
     }
 
     this.setWidth(totalWidth + this.xShift);
@@ -215,25 +213,16 @@ export class Bend extends Modifier {
       ctx.fill();
     };
 
-    const renderText = (x: number, text: string) => {
-      const element = new Element();
-      element.setText(text);
-      element.setFont(this.textFont);
-      const renderX = x - element.getWidth() / 2;
-      element.renderText(ctx, renderX, annotationY);
-    };
-
     let lastBend = undefined;
     let lastBendDrawWidth = 0;
     let lastDrawnWidth = 0;
-    if (this.tap?.length) {
+    if (this.tap.getText().length) {
       const tapStart = note.getModifierStartXY(Modifier.Position.CENTER, this.index);
-      renderText(tapStart.x, this.tap);
+      this.tap.renderText(ctx, tapStart.x - this.tap.getWidth() / 2, annotationY);
     }
 
     for (let i = 0; i < this.phrase.length; ++i) {
       const bend = this.phrase[i];
-      if (!bend.drawWidth) bend.drawWidth = 0;
       if (i === 0) bend.drawWidth += xShift;
 
       lastDrawnWidth = bend.drawWidth + lastBendDrawWidth - (i === 1 ? xShift : 0);
@@ -261,23 +250,23 @@ export class Bend extends Modifier {
         }
       }
 
-      renderText(start.x + lastDrawnWidth, bend.text);
+      bend.renderText(ctx, start.x + lastDrawnWidth - bend.getWidth() / 2, annotationY);
       lastBend = bend;
       lastBendDrawWidth = bend.drawWidth;
-      lastBend.x = start.x;
+      lastBend.setX(start.x);
 
       start.x += lastDrawnWidth;
     }
 
-    if (!lastBend || lastBend.x === undefined) {
+    if (!lastBend) {
       throw new RuntimeError('NoLastBendForBend', 'Internal error.');
     }
 
     // Final arrowhead and text
     if (lastBend.type === Bend.UP) {
-      renderArrowHead(lastBend.x + lastDrawnWidth, bendHeight, +1);
+      renderArrowHead(lastBend.getX() + lastDrawnWidth, bendHeight, +1);
     } else if (lastBend.type === Bend.DOWN) {
-      renderArrowHead(lastBend.x + lastDrawnWidth, start.y, -1);
+      renderArrowHead(lastBend.getX() + lastDrawnWidth, start.y, -1);
     }
   }
 }

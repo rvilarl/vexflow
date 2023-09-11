@@ -5,13 +5,13 @@
 
 import { TestOptions, VexFlowTests } from './vexflow_test_helpers';
 
-import { Bend, BendPhrase } from '../src/bend';
+import { Bend } from '../src/bend';
 import { Formatter } from '../src/formatter';
 import { ModifierContext } from '../src/modifiercontext';
 import { Note } from '../src/note';
 import { ContextBuilder } from '../src/renderer';
 import { Tables } from '../src/tables';
-import { TabNote, TabNoteStruct } from '../src/tabnote';
+import { TabNote } from '../src/tabnote';
 import { TabStave } from '../src/tabstave';
 import { TickContext } from '../src/tickcontext';
 
@@ -28,10 +28,6 @@ const BendTests = {
   },
 };
 
-// Helper functions for creating TabNote and Bend objects.
-const note = (noteStruct: TabNoteStruct) => new TabNote(noteStruct);
-const bendWithPhrase = (phrase: BendPhrase[]) => new Bend(phrase);
-
 /**
  * Bend two strings at a time.
  */
@@ -43,28 +39,28 @@ function doubleBends(options: TestOptions, contextBuilder: ContextBuilder): void
   const stave = new TabStave(10, 10, 450).addClef('tab').setContext(ctx).draw();
 
   const notes = [
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 10 },
         { str: 4, fret: 9 },
       ],
       duration: 'q',
     })
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: 'Full' }]), 0)
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/2' }]), 1),
+      .addModifier(new Bend([{ type: Bend.UP, text: 'Full' }]), 0)
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/2' }]), 1),
 
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 5 },
         { str: 3, fret: 5 },
       ],
       duration: 'q',
     })
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/4' }]), 0)
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/4' }]), 1),
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/4' }]), 0)
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/4' }]), 1),
 
     // This note is not visible because it is pushed off to the right by the ctx.scale(1.5, 1.5) at the top.
-    note({
+    new TabNote({
       positions: [{ str: 4, fret: 7 }],
       duration: 'h',
     }),
@@ -84,7 +80,7 @@ function doubleBendsWithRelease(options: TestOptions, contextBuilder: ContextBui
   const stave = new TabStave(10, 10, 550).addClef('tab').setContext(ctx).draw();
 
   const notes = [
-    note({
+    new TabNote({
       positions: [
         { str: 1, fret: 10 },
         { str: 4, fret: 9 },
@@ -92,21 +88,21 @@ function doubleBendsWithRelease(options: TestOptions, contextBuilder: ContextBui
       duration: 'q',
     })
       .addModifier(
-        bendWithPhrase([
+        new Bend([
           { type: Bend.UP, text: '1/2' },
           { type: Bend.DOWN, text: '' },
         ]),
         0
       )
       .addModifier(
-        bendWithPhrase([
+        new Bend([
           { type: Bend.UP, text: 'Full' },
           { type: Bend.DOWN, text: '' },
         ]),
         1
       ),
 
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 5 },
         { str: 3, fret: 5 },
@@ -115,32 +111,32 @@ function doubleBendsWithRelease(options: TestOptions, contextBuilder: ContextBui
       duration: 'q',
     })
       .addModifier(
-        bendWithPhrase([
+        new Bend([
           { type: Bend.UP, text: '1/4' },
           { type: Bend.DOWN, text: '' },
         ]),
         0
       )
       .addModifier(
-        bendWithPhrase([
+        new Bend([
           { type: Bend.UP, text: 'Monstrous' },
           { type: Bend.DOWN, text: '' },
         ]),
         1
       )
       .addModifier(
-        bendWithPhrase([
+        new Bend([
           { type: Bend.UP, text: '1/4' },
           { type: Bend.DOWN, text: '' },
         ]),
         2
       ),
 
-    note({
+    new TabNote({
       positions: [{ str: 4, fret: 7 }],
       duration: 'q',
     }),
-    note({
+    new TabNote({
       positions: [{ str: 4, fret: 7 }],
       duration: 'q',
     }),
@@ -166,27 +162,27 @@ function reverseBends(options: TestOptions, contextBuilder: ContextBuilder): voi
   const stave = new TabStave(10, 10, 450).addClef('tab').setContext(ctx).draw();
 
   const notes = [
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 10 },
         { str: 4, fret: 9 },
       ],
       duration: 'w',
     })
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: 'Full' }]), 1)
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/2' }]), 0),
+      .addModifier(new Bend([{ type: Bend.UP, text: 'Full' }]), 1)
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/2' }]), 0),
 
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 5 },
         { str: 3, fret: 5 },
       ],
       duration: 'w',
     })
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/4' }]), 1)
-      .addModifier(bendWithPhrase([{ type: Bend.UP, text: '1/4' }]), 0),
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/4' }]), 1)
+      .addModifier(new Bend([{ type: Bend.UP, text: '1/4' }]), 0),
 
-    note({
+    new TabNote({
       positions: [{ str: 4, fret: 7 }],
       duration: 'w',
     }),
@@ -222,10 +218,10 @@ function bendPhrase(options: TestOptions, contextBuilder: ContextBuilder): void 
     { type: Bend.UP, text: '1/2' },
     { type: Bend.DOWN, text: '' },
   ];
-  const bend1 = bendWithPhrase(phrase1).setContext(ctx);
+  const bend1 = new Bend(phrase1).setContext(ctx);
 
   const notes = [
-    note({
+    new TabNote({
       positions: [{ str: 2, fret: 10 }],
       duration: 'w',
     }).addModifier(bend1, 0),
@@ -273,15 +269,15 @@ function whackoBends(options: TestOptions, contextBuilder: ContextBuilder): void
   ];
 
   const notes = [
-    note({
+    new TabNote({
       positions: [
         { str: 2, fret: 10 },
         { str: 3, fret: 9 },
       ],
       duration: 'q',
     })
-      .addModifier(bendWithPhrase(phrase1), 0)
-      .addModifier(bendWithPhrase(phrase2), 1),
+      .addModifier(new Bend(phrase1), 0)
+      .addModifier(new Bend(phrase2), 1),
   ];
 
   Formatter.FormatAndDraw(ctx, stave, notes);
