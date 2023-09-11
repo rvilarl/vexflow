@@ -216,11 +216,11 @@ export class Bend extends Modifier {
     };
 
     const renderText = (x: number, text: string) => {
-      ctx.save();
-      ctx.setFont(this.textFont);
-      const renderX = x - ctx.measureText(text).width / 2;
-      ctx.fillText(text, renderX, annotationY);
-      ctx.restore();
+      const element = new Element();
+      element.setText(text);
+      element.setFont(this.textFont);
+      const renderX = x - element.getWidth() / 2;
+      element.renderText(ctx, renderX, annotationY);
     };
 
     let lastBend = undefined;
